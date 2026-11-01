@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sarvam Reminders</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a7f4b">
 <style>
   :root { --green: #1a7f4b; --red: #c0392b; --ink: #1d1d1f; --muted: #6b6b6b; --line: #e3e3e3; }
   * { box-sizing: border-box; }
@@ -61,6 +63,7 @@
         </select>
       </div>
       <div class="row" style="margin-top:.5rem">
+        <input id="dAmount" type="number" min="0" placeholder="Amount (₹), optional">
         <input id="dDue" type="datetime-local">
         <select id="dRepeat">
           <option value="none">Ek baar</option><option value="daily">Roz</option><option value="monthly">Har mahine</option>
@@ -122,7 +125,7 @@ async function transcribe(blob) {
 async function parseText(text) {
   const now = new Date();
   const system = `You turn a reminder request into JSON. Today is ${now.toString()}. The user's timezone is Asia/Kolkata.
-Reply ONLY with a JSON object: {"title": string, "category": "bill"|"medicine"|"payment"|"other", "due": "YYYY-MM-DDTHH:MM" (24h, local time), "repeat": "none"|"daily"|"monthly", "lang": one of ${LANGS.join(", ")}}.
+Reply ONLY with a JSON object: {"title": string, "category": "bill"|"medicine"|"payment"|"other", "due": "YYYY-MM-DDTHH:MM" (24h, local time), "repeat": "none"|"daily"|"monthly", "amount": number or null (rupees, only if stated), "lang": one of ${LANGS.join(", ")}}.
 The title must be in the same language as the request. If only a time is given, pick the next future occurrence.`;
   const data = await call("/v1/chat/completions", {
     method: "POST",
@@ -153,6 +156,7 @@ function showDraft(d) {
   $("dTitle").value = d.title || "";
   $("dCategory").value = d.category || "other";
   $("dDue").value = (d.due || "").slice(0, 16);
+  $("dAmount").value = d.amount ?? "";
   $("dRepeat").value = d.repeat || "none";
   $("draft").hidden = false;
 }
@@ -196,7 +200,9 @@ $("saveDraft").onclick = () => {
   const due = $("dDue").value;
   const title = $("dTitle").value.trim();
   if (!title || !due) return setStatus("Title aur time dono zaroori hain.");
+  const amount = parseFloat($("dAmount").value);
   reminders.push({ id: Date.now(), title, category: $("dCategory").value, due: due,
+    amount: Number.isFinite(amount) ? amount : null,
     repeat: $("dRepeat").value, lang: draft?.lang || "hi-IN", done: false, notified: false });
   draft = null; $("draft").hidden = true; $("typed").value = "";
   setStatus("Reminder save ho gaya.");
@@ -233,7 +239,8 @@ function render() {
     title.textContent = r.title;
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = `${r.due.replace("T", " ")} · ${r.repeat === "none" ? "ek baar" : r.repeat}`;
+    meta.textContent = `${r.due.replace("T", " ")} · ${r.repeat === "none" ? "ek baar" : r.repeat}`
+      + (r.amount != null ? ` · ₹${r.amount}` : "");
     const tag = document.createElement("span");
     tag.className = "tag"; tag.textContent = r.category;
     card.append(tag, title, meta);
@@ -246,7 +253,19 @@ function render() {
     const del = document.createElement("button");
     del.className = "danger"; del.textContent = "Delete";
     del.onclick = () => { reminders = reminders.filter(x => x.id !== r.id); persist(); };
-    actions.append(done, del);
+    const snooze = document.createElement("button");
+    snooze.className = "secondary"; snooze.textContent = "10 min baad";
+    snooze.onclick = () => {
+      r.due = toLocalInput(new Date(Date.now() + 10 * 60 * 1000));
+      r.notified = false; r.done = false; persist();
+    };
+    const share = document.createElement("a");
+    share.textContent = "WhatsApp";
+    share.href = "https://wa.me/?text=" + encodeURIComponent(`Reminder: ${r.title} (${r.due.replace("T", " ")})`);
+    share.target = "_blank"; share.rel = "noopener";
+    share.className = "secondary";
+    share.style.cssText = "padding:.6rem 1rem;border-radius:8px;background:#eee;color:#1d1d1f;text-decoration:none";
+    actions.append(done, snooze, share, del);
     card.append(actions);
     list.append(card);
   }

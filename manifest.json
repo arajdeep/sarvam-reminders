@@ -1,0 +1,8 @@
+{
+  "name": "Sarvam Reminders",
+  "short_name": "Reminders",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fafaf8",
+  "theme_color": "#1a7f4b"
+}
