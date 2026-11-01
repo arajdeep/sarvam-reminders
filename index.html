@@ -7,106 +7,257 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a7f4b">
 <style>
-  :root { --green: #1a7f4b; --red: #c0392b; --ink: #1d1d1f; --muted: #6b6b6b; --line: #e3e3e3; }
+  :root { --green: #1a7f4b; --green-soft: #eef5f0; --red: #c0392b; --amber: #b7791f; --ink: #1d1d1f; --muted: #6b6b6b; --line: #e3e3e3; }
   * { box-sizing: border-box; }
   body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); margin: 0; background: #fafaf8; }
-  main { max-width: 640px; margin: 0 auto; padding: 1.25rem; }
+  main { max-width: 680px; margin: 0 auto; padding: 1.25rem; }
   h1 { font-size: 1.6rem; margin: .5rem 0 .25rem; }
-  h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
-  p.hint { color: var(--muted); margin: .25rem 0 1rem; font-size: .95rem; }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1rem; margin-bottom: .75rem; }
-  input, select, textarea { font: inherit; width: 100%; padding: .6rem .7rem; border: 1px solid #cfcfcf; border-radius: 8px; background: #fff; }
-  .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
-  .row > * { flex: 1 1 140px; }
-  button { font: inherit; padding: .6rem 1rem; border: none; border-radius: 8px; background: var(--green); color: #fff; cursor: pointer; }
-  button.secondary { background: #eee; color: var(--ink); }
-  button.danger { background: var(--red); }
+  h2 { font-size: 1.05rem; margin: 0 0 .6rem; }
+  p.hint { color: var(--muted); margin: .25rem 0 .75rem; font-size: .95rem; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1rem; margin-bottom: .9rem; }
+  input, select { font: inherit; width: 100%; padding: .55rem .7rem; border: 1px solid #cfcfcf; border-radius: 8px; background: #fff; }
+  label.f { display: block; font-size: .85rem; color: var(--muted); }
+  .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: end; }
+  .row > * { flex: 1 1 150px; }
+  button, .btn { font: inherit; padding: .55rem .95rem; border: none; border-radius: 8px; background: var(--green); color: #fff; cursor: pointer; text-decoration: none; display: inline-block; }
+  .secondary { background: #eee; color: var(--ink); }
+  .danger { background: var(--red); }
   button:disabled { opacity: .5; cursor: default; }
   #mic { width: 100%; padding: 1rem; font-size: 1.15rem; border-radius: 999px; }
   #mic.rec { background: var(--red); }
-  .meta { color: var(--muted); font-size: .9rem; margin-top: .25rem; }
-  .tag { display: inline-block; font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; background: #eef5f0; color: var(--green); margin-right: .35rem; }
-  .done { opacity: .55; text-decoration: line-through; }
-  .due { border-left: 4px solid var(--red); }
+  .tabs { display: flex; gap: .4rem; margin: .75rem 0 1rem; }
+  .tabs button { flex: 1; background: #eee; color: var(--ink); }
+  .tabs button.on { background: var(--green); color: #fff; }
+  .meta { color: var(--muted); font-size: .9rem; }
+  .tag { display: inline-block; font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; background: var(--green-soft); color: var(--green); margin-right: .35rem; }
+  .slot { display: flex; justify-content: space-between; gap: .75rem; align-items: center; padding: .6rem 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .slot:first-of-type { border-top: none; }
+  .slot .acts { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .st-taken { color: var(--green); font-weight: 600; }
+  .st-missed { color: var(--red); font-weight: 600; }
+  .st-snoozed { color: var(--amber); font-weight: 600; }
+  .alert { padding: .55rem .7rem; border-radius: 8px; margin-bottom: .4rem; display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .alert.urgent { background: #fdecea; color: var(--red); font-weight: 600; }
+  .alert.watch { background: #fff6e5; color: #7a5200; }
+  .checkin { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
+  .checkin button.on { outline: 3px solid var(--ink); }
+  .streak { color: var(--green); font-weight: 600; margin-top: .4rem; }
   #status { min-height: 1.25rem; color: var(--muted); margin: .5rem 0; font-size: .95rem; }
-  .actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
-  footer { color: var(--muted); font-size: .85rem; margin: 2rem 0; }
-  @media (max-width: 420px) { h1 { font-size: 1.35rem; } main { padding: .9rem; } }
+  .note { font-size: .85rem; color: var(--muted); background: #f3f3f0; border-radius: 8px; padding: .5rem .7rem; margin-top: .6rem; }
+  footer { color: var(--muted); font-size: .85rem; margin: 1.5rem 0; }
+  @media (max-width: 420px) { h1 { font-size: 1.35rem; } main { padding: .9rem; } .slot { align-items: start; } }
 </style>
 </head>
 <body>
 <main>
   <h1>Reminders</h1>
-  <p class="hint">Bolkar ya likhkar reminder banaiye. Bill, dawai aur payment ki yaad dilaaye, apni bhasha mein.</p>
+  <p class="hint">Dawai, khana, bill aur payment ki yaad. Boliye ya likhiye, apni bhasha mein.</p>
+
+  <div class="tabs" role="tablist">
+    <button data-mode="solo">Solo</button>
+    <button data-mode="family">Family</button>
+    <button data-mode="couples">Couples</button>
+    <button data-mode="care">Care home</button>
+  </div>
+  <p class="hint" id="modeHint"></p>
 
   <section id="setup" class="card" hidden>
-    <strong>Sarvam API key</strong>
+    <h2>Sarvam API key</h2>
     <p class="hint">Apni key daalein. Yeh sirf is browser mein save hogi.</p>
     <div class="row">
       <input id="keyInput" type="password" placeholder="Sarvam API key" autocomplete="off">
-      <button id="saveKey">Save</button>
+      <button id="saveKey" style="flex:0 0 auto">Save</button>
     </div>
   </section>
 
-  <section id="compose" class="card">
+  <section class="card" id="peopleCard">
+    <h2 id="peopleTitle">Log</h2>
+    <div id="people"></div>
+    <div id="addMember" class="row" style="margin-top:.6rem" hidden>
+      <input id="mName" placeholder="Naam (jaise Dadi, Baby Aarav)">
+      <select id="mProfile" style="flex:0 0 130px">
+        <option value="elder">Bujurg</option><option value="adult">Adult</option>
+        <option value="child">Bachcha</option><option value="baby">Baby</option>
+      </select>
+      <button id="mAdd" class="secondary" style="flex:0 0 auto">Add member</button>
+    </div>
+    <div id="addCaregiver" class="row" style="margin-top:.6rem" hidden>
+      <input id="cgName" placeholder="Caregiver ka naam (jaise Ravi)">
+      <button id="cgAdd" class="secondary" style="flex:0 0 auto">Add caregiver</button>
+    </div>
+    <div id="syncNote" class="note" hidden></div>
+  </section>
+
+  <section class="card" id="checkinCard">
+    <h2>Sab theek hai?</h2>
+    <div id="checkins"></div>
+  </section>
+
+  <section class="card" id="boardCard" hidden>
+    <h2>Aaj ka board</h2>
+    <div id="board"></div>
+  </section>
+
+  <section class="card" id="alertsCard" hidden>
+    <h2>Alerts</h2>
+    <div id="alerts"></div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="align-items:center;margin-bottom:.6rem">
+      <div><label class="f">Quick add (bina API call ke)</label><select id="tPerson"></select></div>
+    </div>
+    <div id="templates" class="checkin" style="margin-bottom:.9rem"></div>
     <button id="mic">🎤 Bolo</button>
     <div class="row" style="margin-top:.75rem">
-      <input id="typed" placeholder="Ya likhein: kal subah 8 baje bijli ka bill bharna">
-      <button id="parseBtn" class="secondary">Samjhao</button>
+      <input id="typed" placeholder="Jaise: roz subah 8 aur raat 9 baje BP ki goli khane ke baad">
+      <button id="parseBtn" class="secondary" style="flex:0 0 auto">Samjhao</button>
     </div>
     <div id="draft" hidden style="margin-top:1rem">
       <div class="row">
-        <input id="dTitle" placeholder="Title">
-        <select id="dCategory">
-          <option value="bill">Bill</option><option value="medicine">Dawai</option>
-          <option value="payment">Payment</option><option value="other">Other</option>
-        </select>
+        <div><label class="f">Kiske liye</label><select id="dPerson"></select></div>
+        <div><label class="f">Title</label><input id="dTitle"></div>
       </div>
       <div class="row" style="margin-top:.5rem">
-        <input id="dAmount" type="number" min="0" placeholder="Amount (₹), optional">
-        <input id="dDue" type="datetime-local">
-        <select id="dRepeat">
-          <option value="none">Ek baar</option><option value="daily">Roz</option><option value="monthly">Har mahine</option>
-        </select>
+        <div><label class="f">Type</label>
+          <select id="dKind"><option value="schedule">Roz ka schedule</option><option value="bill">Ek date par (bill, vaccine, doctor)</option></select></div>
+        <div><label class="f">Category</label>
+          <select id="dCategory"><option value="medicine">Dawai</option><option value="meal">Khana</option>
+            <option value="bill">Bill</option><option value="payment">Payment</option>
+            <option value="appointment">Doctor / vaccine</option><option value="other">Other</option></select></div>
       </div>
-      <div class="actions">
-        <button id="saveDraft">Save reminder</button>
-        <button id="cancelDraft" class="secondary">Cancel</button>
+      <div class="row" style="margin-top:.5rem" id="scheduleFields">
+        <div><label class="f">Time (HH:MM, comma se alag)</label><input id="dTimes" placeholder="08:00, 21:00"></div>
+        <div><label class="f">Khane ke saath</label>
+          <select id="dFood"><option value="any">Koi farak nahi</option><option value="before">Khane se pehle (30 min)</option>
+            <option value="after">Khane ke baad (20 min)</option><option value="with">Khane ke saath</option></select></div>
+      </div>
+      <div class="row" style="margin-top:.5rem" id="billFields" hidden>
+        <div><label class="f">Due date</label><input id="dDue" type="date"></div>
+        <div><label class="f">Repeat</label>
+          <select id="dRepeat"><option value="none">Ek baar</option><option value="monthly">Har mahine</option></select></div>
+        <div><label class="f">Amount (₹)</label><input id="dAmount" type="number" min="0"></div>
+      </div>
+      <div class="row" style="margin-top:.75rem">
+        <button id="saveDraft" style="flex:0 0 auto">Save reminder</button>
+        <button id="cancelDraft" class="secondary" style="flex:0 0 auto">Cancel</button>
       </div>
     </div>
   </section>
 
-  <div id="status"></div>
-
-  <h2>Aapke reminders</h2>
-  <div id="list"></div>
+  <div id="status" role="status"></div>
 
   <section class="card">
-    <strong>Backup</strong>
-    <p class="hint">Reminders ek file mein save karein, ya doosre phone par wapas laayein.</p>
-    <div class="actions">
-      <button id="exportBtn" class="secondary">Download backup</button>
-      <label class="secondary" style="padding:.6rem 1rem;border-radius:8px;cursor:pointer;background:#eee">
-        Restore file <input id="importFile" type="file" accept="application/json" hidden>
-      </label>
+    <div class="row" style="align-items:center">
+      <h2 style="margin:0">Aaj</h2>
+      <button id="summaryBtn" class="secondary" style="flex:0 0 auto">🔊 Aaj ka summary suno</button>
+    </div>
+    <div id="today" style="margin-top:.5rem"></div>
+    <div id="streaks"></div>
+  </section>
+
+  <section class="card">
+    <h2>Saare reminders</h2>
+    <div id="all"></div>
+  </section>
+
+  <section class="card">
+    <h2>Backup</h2>
+    <p class="hint">Sab kuch ek file mein save karein, ya doosre phone par wapas laayein.</p>
+    <div class="row">
+      <button id="exportBtn" class="secondary" style="flex:0 0 auto">Download backup</button>
+      <label class="btn secondary" style="flex:0 0 auto">Restore file <input id="importFile" type="file" accept="application/json" hidden></label>
     </div>
   </section>
 
-  <footer>Reminders is browser ke khule rehne par chalte hain. Speech aur samajh Sarvam AI se hoti hai.</footer>
+  <footer>Reminders tab tak bajte hain jab tak yeh page khula hai. Speech, samajh aur awaz: Sarvam AI.</footer>
 </main>
 
+<script src="logic.js"></script>
 <script>
 const API = "https://api.sarvam.ai";
 const LANGS = ["hi-IN","bn-IN","gu-IN","kn-IN","ml-IN","mr-IN","od-IN","pa-IN","ta-IN","te-IN","en-IN"];
+const STORE_KEY = "sarvam_reminders_v2";
 const $ = id => document.getElementById(id);
+
 let key = localStorage.getItem("sarvam_key") || "";
-let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+let state = loadState();
 let draft = null, recorder = null, chunks = [];
 
-function setStatus(msg) { $("status").textContent = msg || ""; }
-function persist() { localStorage.setItem("reminders", JSON.stringify(reminders)); render(); }
+// ---------- state ----------
+function blankState() {
+  return { mode: "solo", people: [{ id: uid(), name: "Main", role: "self", profile: "adult" }],
+    reminders: [], doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode() };
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (s && Array.isArray(s.people) && Array.isArray(s.reminders)) {
+      return { doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode(), ...s };
+    }
+  } catch {}
+  return blankState();
+}
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); render(); }
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function makeCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+const members = () => state.people.filter(p => p.role !== "caregiver");
+const caregivers = () => state.people.filter(p => p.role === "caregiver");
+const personName = id => state.people.find(p => p.id === id)?.name || "";
 
+// Switching mode only relabels people; nobody's reminders are deleted.
+function setMode(mode) {
+  const role = { solo: "self", family: "cared", couples: "partner", care: "resident" }[mode];
+  if (mode === "couples" && members().length < 2) {
+    state.people.push({ id: uid(), name: "Partner 2", role: "partner", profile: "adult" });
+  }
+  members().forEach(p => { p.role = role; });
+  state.mode = mode;
+  save();
+}
+// People shown in the current mode (others are kept, not deleted).
+function activeMembers() {
+  if (state.mode === "solo") return members().slice(0, 1);
+  if (state.mode === "couples") return members().slice(0, 2);
+  return members(); // family and care home: everyone being looked after
+}
+const MODE_HINT = {
+  solo: "Akele rehne waalon ke liye: apni dawai, khana aur bills.",
+  family: "Ghar ke sab log: baby, bachche, bade-bujurg. Caregivers reminder set karte hain aur alerts dekhte hain.",
+  couples: "Dono partner ek doosre ki dawai aur bills dekh sakte hain.",
+  care: "Daycare aur old-age homes: har resident ka schedule, staff ke liye ek board aur alerts.",
+};
+// Ready-made reminders per profile. Adding these needs no API call.
+const TEMPLATES = {
+  baby: [
+    { title: "Doodh / feeding", kind: "schedule", category: "meal", times: ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00"], food: "any" },
+    { title: "Vitamin D drops", kind: "schedule", category: "medicine", times: ["09:30"], food: "after" },
+    { title: "Vaccine", kind: "bill", category: "appointment", needsDate: true },
+  ],
+  child: [
+    { title: "Tiffin aur school bag", kind: "schedule", category: "other", times: ["07:00"], food: "any" },
+    { title: "Homework", kind: "schedule", category: "other", times: ["18:30"], food: "any" },
+    { title: "Doctor checkup", kind: "bill", category: "appointment", needsDate: true },
+  ],
+  adult: [
+    { title: "Paani piyo", kind: "schedule", category: "other", times: ["11:00", "16:00"], food: "any" },
+    { title: "Bijli ka bill", kind: "bill", category: "bill", repeat: "monthly", needsDate: true },
+    { title: "Phone recharge", kind: "bill", category: "payment", repeat: "monthly", needsDate: true },
+  ],
+  elder: [
+    { title: "Sugar check", kind: "schedule", category: "medicine", times: ["07:30"], food: "before" },
+    { title: "BP ki goli", kind: "schedule", category: "medicine", times: ["08:30", "20:30"], food: "after" },
+    { title: "Shaam ki walk", kind: "schedule", category: "other", times: ["17:30"], food: "any" },
+    { title: "Pension / bank ka kaam", kind: "bill", category: "payment", repeat: "monthly", needsDate: true },
+  ],
+};
+
+// ---------- Sarvam calls ----------
 async function call(path, options) {
+  if (!key) throw new Error("Pehle Sarvam API key daalein.");
   const res = await fetch(API + path, { ...options, headers: { "api-subscription-key": key, ...(options.headers || {}) } });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error?.message || data?.message || `HTTP ${res.status}`);
@@ -115,61 +266,80 @@ async function call(path, options) {
 
 async function transcribe(blob) {
   const form = new FormData();
-  form.append("file", new File([blob], "speech.webm", { type: blob.type }));
+  form.append("file", new File([blob], "speech.webm", { type: blob.type || "audio/webm" }));
   form.append("model", "saaras:v3");
   form.append("mode", "transcribe");
-  const data = await call("/speech-to-text", { method: "POST", body: form });
-  return data.transcript || "";
+  return (await call("/speech-to-text", { method: "POST", body: form })).transcript || "";
 }
 
 async function parseText(text) {
   const now = new Date();
-  const system = `You turn a reminder request into JSON. Today is ${now.toString()}. The user's timezone is Asia/Kolkata.
-Reply ONLY with a JSON object: {"title": string, "category": "bill"|"medicine"|"payment"|"other", "due": "YYYY-MM-DDTHH:MM" (24h, local time), "repeat": "none"|"daily"|"monthly", "amount": number or null (rupees, only if stated), "lang": one of ${LANGS.join(", ")}}.
-The title must be in the same language as the request. If only a time is given, pick the next future occurrence.`;
+  const names = activeMembers().map(p => p.name).join(", ");
+  const system = `You turn one reminder request into JSON. Now: ${now.toString()} (Asia/Kolkata). Today: ${Logic.todayStr(now)}.
+People in this household: ${names}.
+Reply ONLY with a JSON object with these keys:
+"person": one of the names above (who the reminder is for; default the first),
+"title": short title in the request's language,
+"kind": "schedule" (daily routine like medicine or meals) or "bill" (a payment due on a date),
+"category": "medicine" | "meal" | "bill" | "payment" | "other",
+"times": array of "HH:MM" 24h times (for schedule),
+"food": "before" | "after" | "with" | "any" (medicine relative to food),
+"dueDate": "YYYY-MM-DD" (for bill; next future occurrence),
+"repeat": "none" | "daily" | "monthly",
+"amount": number in rupees or null,
+"lang": one of ${LANGS.join(", ")} (the request's language).`;
   const data = await call("/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "sarvam-105b",
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "sarvam-105b",
       messages: [{ role: "system", content: system }, { role: "user", content: text }],
-      response_format: { type: "json_object" },
-      temperature: 0,
-      max_tokens: 1500,
-    }),
+      response_format: { type: "json_object" }, temperature: 0, max_tokens: 1500 }),
   });
-  return JSON.parse(data.choices[0].message.content);
+  const raw = JSON.parse(data.choices?.[0]?.message?.content || "{}");
+  const clean = Logic.normalizeParsed(raw, Logic.todayStr(now));
+  const person = activeMembers().find(p => p.name.toLowerCase() === String(raw.person || "").toLowerCase());
+  return { ...clean, personId: person ? person.id : activeMembers()[0].id };
 }
 
 async function speak(text, lang) {
   const data = await call("/text-to-speech", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, language_code: LANGS.includes(lang) ? lang : "hi-IN",
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: text.slice(0, 1500), language_code: LANGS.includes(lang) ? lang : "hi-IN",
       speaker: "shubh", model: "bulbul:v3", output_audio_codec: "wav" }),
   });
-  new Audio("data:audio/wav;base64," + data.audios[0]).play();
+  await new Audio("data:audio/wav;base64," + data.audios[0]).play();
 }
 
+function setStatus(msg) { $("status").textContent = msg || ""; }
+
+// ---------- compose ----------
 function showDraft(d) {
   draft = d;
+  $("dPerson").replaceChildren(...activeMembers().map(p => new Option(p.name, p.id, false, p.id === d.personId)));
   $("dTitle").value = d.title || "";
+  $("dKind").value = d.kind || "schedule";
   $("dCategory").value = d.category || "other";
-  $("dDue").value = (d.due || "").slice(0, 16);
+  $("dTimes").value = (d.times || []).join(", ");
+  $("dFood").value = d.food || "any";
+  $("dDue").value = d.dueDate || "";
+  $("dRepeat").value = d.repeat === "monthly" ? "monthly" : "none";
   $("dAmount").value = d.amount ?? "";
-  $("dRepeat").value = d.repeat || "none";
+  toggleKind();
   $("draft").hidden = false;
 }
+function toggleKind() {
+  const bill = $("dKind").value === "bill";
+  $("scheduleFields").hidden = bill;
+  $("billFields").hidden = !bill;
+}
+$("dKind").onchange = toggleKind;
 
 async function understand(text) {
   setStatus("Samajh raha hoon...");
-  try {
-    showDraft(await parseText(text));
-    setStatus("Check karke Save kijiye.");
-  } catch (e) { setStatus("Error: " + e.message); }
+  try { showDraft(await parseText(text)); setStatus("Check karke Save kijiye."); }
+  catch (e) { setStatus("Samajh nahi aaya: " + e.message); }
 }
-
-$("parseBtn").onclick = () => { if ($("typed").value.trim()) understand($("typed").value.trim()); };
+$("parseBtn").onclick = () => { const t = $("typed").value.trim(); if (t) understand(t); };
+$("typed").onkeydown = e => { if (e.key === "Enter") $("parseBtn").click(); };
 
 $("mic").onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
@@ -197,140 +367,318 @@ $("mic").onclick = async () => {
 };
 
 $("saveDraft").onclick = () => {
-  const due = $("dDue").value;
-  const title = $("dTitle").value.trim();
-  if (!title || !due) return setStatus("Title aur time dono zaroori hain.");
-  const amount = parseFloat($("dAmount").value);
-  reminders.push({ id: Date.now(), title, category: $("dCategory").value, due: due,
-    amount: Number.isFinite(amount) ? amount : null,
-    repeat: $("dRepeat").value, lang: draft?.lang || "hi-IN", done: false, notified: false });
+  const today = Logic.todayStr();
+  const kind = $("dKind").value;
+  const raw = {
+    title: $("dTitle").value, kind, category: $("dCategory").value, food: $("dFood").value,
+    times: $("dTimes").value.split(/[,\s]+/).filter(Boolean),
+    dueDate: $("dDue").value, repeat: kind === "bill" ? $("dRepeat").value : "daily",
+    amount: $("dAmount").value, lang: draft?.lang || "hi-IN",
+  };
+  let clean;
+  try { clean = Logic.normalizeParsed(raw, today); }
+  catch (e) { return setStatus(e.message); }
+  state.reminders.push({ ...clean, id: uid(), personId: $("dPerson").value, createdBy: activeMembers()[0]?.id });
   draft = null; $("draft").hidden = true; $("typed").value = "";
   setStatus("Reminder save ho gaya.");
-  persist();
+  save();
 };
 $("cancelDraft").onclick = () => { draft = null; $("draft").hidden = true; setStatus(""); };
 
-// Local "YYYY-MM-DDTHH:MM" (no UTC shift, unlike toISOString).
-function toLocalInput(d) {
-  const p = n => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+// ---------- render ----------
+function el(tag, props = {}, ...kids) {
+  const n = Object.assign(document.createElement(tag), props);
+  n.append(...kids.filter(k => k !== null && k !== undefined));
+  return n;
 }
-
-function advance(r) {
-  const d = new Date(r.due);
-  if (r.repeat === "daily") d.setDate(d.getDate() + 1);
-  else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);
-  else return false;
-  r.due = toLocalInput(d);
-  r.notified = false;
-  return true;
-}
+const fmtTime = d => d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+const STATUS_TEXT = { taken: "✓ Le liya", missed: "Chhoot gaya", snoozed: "Baad mein", pending: "" };
+const ROLE_TEXT = { self: "Aap", cared: "Member", caregiver: "Caregiver", partner: "Partner", resident: "Resident" };
+const PROFILE_TEXT = { baby: "Baby", child: "Bachcha", adult: "Adult", elder: "Bujurg" };
 
 function render() {
-  const list = $("list");
-  list.replaceChildren();
-  const sorted = [...reminders].sort((a, b) => a.due.localeCompare(b.due));
-  if (!sorted.length) { list.textContent = "Abhi koi reminder nahi hai."; return; }
-  for (const r of sorted) {
-    const card = document.createElement("div");
-    const overdue = !r.done && new Date(r.due) <= new Date();
-    card.className = "card" + (r.done ? " done" : "") + (overdue ? " due" : "");
-    const title = document.createElement("strong");
-    title.textContent = r.title;
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.textContent = `${r.due.replace("T", " ")} · ${r.repeat === "none" ? "ek baar" : r.repeat}`
-      + (r.amount != null ? ` · ₹${r.amount}` : "");
-    const tag = document.createElement("span");
-    tag.className = "tag"; tag.textContent = r.category;
-    card.append(tag, title, meta);
-    const actions = document.createElement("div");
-    actions.className = "actions";
-    const done = document.createElement("button");
-    done.className = "secondary";
-    done.textContent = r.done ? "Undo" : "Ho gaya";
-    done.onclick = () => { r.done = !r.done; r.notified = r.done; persist(); };
-    const del = document.createElement("button");
-    del.className = "danger"; del.textContent = "Delete";
-    del.onclick = () => { reminders = reminders.filter(x => x.id !== r.id); persist(); };
-    const snooze = document.createElement("button");
-    snooze.className = "secondary"; snooze.textContent = "10 min baad";
-    snooze.onclick = () => {
-      r.due = toLocalInput(new Date(Date.now() + 10 * 60 * 1000));
-      r.notified = false; r.done = false; persist();
-    };
-    const share = document.createElement("a");
-    share.textContent = "WhatsApp";
-    share.href = "https://wa.me/?text=" + encodeURIComponent(`Reminder: ${r.title} (${r.due.replace("T", " ")})`);
-    share.target = "_blank"; share.rel = "noopener";
-    share.className = "secondary";
-    share.style.cssText = "padding:.6rem 1rem;border-radius:8px;background:#eee;color:#1d1d1f;text-decoration:none";
-    actions.append(done, snooze, share, del);
-    card.append(actions);
-    list.append(card);
-  }
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.mode === state.mode));
+  $("setup").hidden = Boolean(key);
+  $("modeHint").textContent = MODE_HINT[state.mode];
+  renderPeople();
+  renderTemplates();
+  renderCheckins();
+  renderBoard();
+  renderAlerts();
+  renderToday();
+  renderAll();
 }
 
-// Check for due reminders while the page is open.
-async function checkDue() {
-  const now = new Date();
-  for (const r of reminders) {
-    if (r.done || r.notified || new Date(r.due) > now) continue;
-    r.notified = true;
-    // Skip old reminders (e.g. missed while the page was closed) instead of blurting them out.
-    const late = now - new Date(r.due) > 10 * 60 * 1000;
-    if (!late) {
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Reminder", { body: r.title });
-      }
-      if (key) {
-        try { await speak(r.title, r.lang); } catch (e) { setStatus("Awaz nahi chali: " + e.message); }
-      }
+const isGroup = () => state.mode === "family" || state.mode === "care";
+
+function renderPeople() {
+  const titles = { solo: "Aap", family: "Parivaar", couples: "Couple", care: "Residents aur staff" };
+  $("peopleTitle").textContent = titles[state.mode];
+  const shown = isGroup() ? [...activeMembers(), ...caregivers()] : activeMembers();
+  $("people").replaceChildren(...shown.map(p => {
+    const name = el("input", { value: p.name, ariaLabel: "Naam" });
+    name.onchange = () => { p.name = name.value.trim() || p.name; save(); };
+    const roleLabel = p.role === "caregiver" && state.mode === "care" ? "Staff" : ROLE_TEXT[p.role];
+    const row = el("div", { className: "row", style: "margin-bottom:.4rem;align-items:center" }, name);
+    if (p.role !== "caregiver") {
+      const prof = el("select", { style: "flex:0 0 120px", ariaLabel: "Profile" },
+        ...Object.entries(PROFILE_TEXT).map(([v, t]) => new Option(t, v, false, (p.profile || "adult") === v)));
+      prof.onchange = () => { p.profile = prof.value; save(); };
+      row.append(prof);
     }
-    if (r.repeat !== "none") advance(r); else r.done = true;
-  }
-  persist();
+    row.append(el("span", { className: "meta", style: "flex:0 0 auto", textContent: roleLabel }));
+    const removable = p.role === "caregiver" || (isGroup() && activeMembers().length > 1);
+    if (removable) {
+      const rm = el("button", { className: "secondary", textContent: "Hatao", style: "flex:0 0 auto" });
+      rm.onclick = () => {
+        state.people = state.people.filter(x => x.id !== p.id);
+        state.reminders = state.reminders.filter(r => r.personId !== p.id);
+        save();
+      };
+      row.append(rm);
+    }
+    return row;
+  }));
+  $("addMember").hidden = !isGroup();
+  $("mName").placeholder = state.mode === "care" ? "Resident ka naam (jaise Sharma ji)" : "Naam (jaise Dadi, Baby Aarav)";
+  $("addCaregiver").hidden = !isGroup();
+  $("cgName").placeholder = state.mode === "care" ? "Staff ka naam (jaise Nurse Priya)" : "Caregiver ka naam (jaise Ravi)";
+  $("cgAdd").textContent = state.mode === "care" ? "Add staff" : "Add caregiver";
+  const shared = state.mode !== "solo";
+  $("syncNote").hidden = !shared;
+  $("syncNote").textContent = shared
+    ? `Group code: ${state.code}. Abhi sab is ek phone/browser mein hai, sab log isi screen se dekh sakte hain. Alag phones par sync ke liye backend jodna baaki hai.`
+    : "";
+}
+$("cgAdd").onclick = () => {
+  const name = $("cgName").value.trim();
+  if (!name) return;
+  state.people.push({ id: uid(), name, role: "caregiver" });
+  $("cgName").value = "";
+  save();
+};
+$("mAdd").onclick = () => {
+  const name = $("mName").value.trim();
+  if (!name) return;
+  const role = state.mode === "care" ? "resident" : "cared";
+  state.people.push({ id: uid(), name, role, profile: $("mProfile").value });
+  $("mName").value = "";
+  save();
+};
+
+function renderTemplates() {
+  const people = activeMembers();
+  const sel = $("tPerson");
+  const keep = sel.value;
+  sel.replaceChildren(...people.map(p => new Option(`${p.name} (${PROFILE_TEXT[p.profile || "adult"]})`, p.id)));
+  if (people.some(p => p.id === keep)) sel.value = keep;
+  const person = people.find(p => p.id === sel.value) || people[0];
+  if (!person) { $("templates").replaceChildren(); return; }
+  $("templates").replaceChildren(...(TEMPLATES[person.profile || "adult"] || []).map(t => {
+    const b = el("button", { className: "secondary", textContent: "+ " + t.title });
+    b.onclick = () => {
+      if (t.needsDate) {
+        showDraft({ ...t, personId: person.id, repeat: t.repeat || "none", lang: "hi-IN" });
+        return setStatus("Date chuniye, phir Save kijiye.");
+      }
+      const clean = Logic.normalizeParsed({ ...t, lang: "hi-IN" }, Logic.todayStr());
+      state.reminders.push({ ...clean, id: uid(), personId: person.id });
+      setStatus(`${person.name} ke liye "${t.title}" add ho gaya.`);
+      save();
+    };
+    return b;
+  }));
+}
+$("tPerson").onchange = renderTemplates;
+
+// Staff/caregiver overview: one row per person with today's progress.
+function renderBoard() {
+  $("boardCard").hidden = !isGroup();
+  if (!isGroup()) return;
+  const now = new Date(), date = Logic.todayStr(now);
+  const answers = { ok: "😊", unwell: "😐", help: "🆘" };
+  $("board").replaceChildren(...activeMembers().map(p => {
+    const slots = state.reminders.filter(r => r.personId === p.id).flatMap(r => Logic.slotsForDay(r, date));
+    const st = slots.map(s => Logic.statusOf(s, state.doses, now));
+    const done = st.filter(x => x === "taken").length;
+    const missed = st.filter(x => x === "missed").length;
+    const answer = state.checkins[`${p.id}|${date}`];
+    return el("div", { className: "slot" },
+      el("div", {}, el("strong", { textContent: p.name }),
+        el("div", { className: "meta", textContent: `${PROFILE_TEXT[p.profile || "adult"]} · ${done}/${slots.length} ho gaya` })),
+      el("div", { className: missed ? "st-missed" : "meta",
+        textContent: [answer ? answers[answer] : "check-in baaki", missed ? `${missed} chhoot gaye` : ""].filter(Boolean).join(" · ") }));
+  }));
 }
 
+function renderCheckins() {
+  const date = Logic.todayStr();
+  const opts = [["ok", "😊 Theek hoon"], ["unwell", "😐 Thoda theek nahi"], ["help", "🆘 Madad chahiye"]];
+  $("checkins").replaceChildren(...activeMembers().map(p => {
+    const k = `${p.id}|${date}`;
+    const btns = opts.map(([v, label]) => {
+      const b = el("button", { className: "secondary" + (state.checkins[k] === v ? " on" : ""), textContent: label });
+      b.onclick = () => {
+        state.checkins[k] = v;
+        setStatus(v === "help" ? "Caregivers ko alert dikh raha hai. Neeche WhatsApp se bhejiye." : "Dhanyavaad!");
+        save();
+      };
+      return b;
+    });
+    return el("div", { style: "margin-bottom:.6rem" },
+      activeMembers().length > 1 ? el("strong", { textContent: p.name }) : null,
+      el("div", { className: "checkin" }, ...btns));
+  }));
+}
+
+function renderAlerts() {
+  const shared = state.mode !== "solo";
+  $("alertsCard").hidden = !shared;
+  if (!shared) return;
+  const alerts = Logic.collectAlerts({ ...state, people: [...activeMembers(), ...caregivers()] });
+  if (!alerts.length) { $("alerts").replaceChildren(el("p", { className: "meta", textContent: "Sab theek. Koi alert nahi." })); return; }
+  $("alerts").replaceChildren(...alerts.map(a => el("div", { className: "alert " + a.level },
+    el("span", { textContent: a.message }),
+    el("a", { className: "btn secondary", target: "_blank", rel: "noopener", textContent: "WhatsApp",
+      href: "https://wa.me/?text=" + encodeURIComponent(a.message) }))));
+}
+
+function todaySlots() {
+  const date = Logic.todayStr();
+  const ids = new Set(activeMembers().map(p => p.id));
+  return state.reminders.filter(r => ids.has(r.personId))
+    .flatMap(r => Logic.slotsForDay(r, date)).sort((a, b) => a.at - b.at);
+}
+
+function renderToday() {
+  const now = new Date();
+  const slots = todaySlots();
+  const multi = activeMembers().length > 1;
+  if (!slots.length) {
+    $("today").replaceChildren(el("p", { className: "meta", textContent: "Aaj ke liye kuch nahi. Upar se reminder banaiye." }));
+  } else {
+    $("today").replaceChildren(...slots.map(s => {
+      const r = state.reminders.find(x => x.id === s.reminderId);
+      const st = Logic.statusOf(s, state.doses, now);
+      const hint = Logic.foodHint(s.food, r?.lang || "hi-IN");
+      const info = el("div", {},
+        el("span", { className: "tag", textContent: s.category }),
+        el("strong", { textContent: s.title }),
+        el("div", { className: "meta", textContent:
+          [fmtTime(s.at), hint, multi ? personName(s.personId) : "", r?.amount != null ? `₹${r.amount}` : ""].filter(Boolean).join(" · ") }),
+        st !== "pending" ? el("div", { className: "st-" + st, textContent: STATUS_TEXT[st] }) : null);
+      const mark = (status, label, cls) => {
+        const b = el("button", { className: cls, textContent: label });
+        b.onclick = () => {
+          state.doses = Logic.markDose(state.doses, s.key, status);
+          if (status === "snoozed") state.snoozes[s.key] = Date.now() + 10 * 60000;
+          else delete state.snoozes[s.key];
+          save();
+        };
+        return b;
+      };
+      const acts = el("div", { className: "acts" },
+        mark("taken", s.category === "bill" || s.category === "payment" ? "Bhar diya" : "Lo liya", ""),
+        mark("snoozed", "10 min baad", "secondary"),
+        mark("missed", "Chhoot gaya", "secondary"));
+      return el("div", { className: "slot" }, info, st === "taken" ? null : acts);
+    }));
+  }
+  const date = Logic.todayStr();
+  $("streaks").replaceChildren(...activeMembers().map(p => {
+    const n = Logic.streak(state.reminders.filter(r => r.personId === p.id), state.doses, date, now);
+    return n > 0 ? el("div", { className: "streak",
+      textContent: `🌱 ${multi ? p.name + ": " : ""}${n} din se saari dawai time par. Shabaash!` }) : null;
+  }).filter(Boolean));
+}
+
+function renderAll() {
+  if (!state.reminders.length) { $("all").replaceChildren(el("p", { className: "meta", textContent: "Abhi koi reminder nahi hai." })); return; }
+  $("all").replaceChildren(...state.reminders.map(r => {
+    const when = r.kind === "bill"
+      ? `${r.dueDate}${r.repeat === "monthly" ? " · har mahine" : ""}`
+      : `${r.times.join(", ")}${r.food !== "any" ? " · " + Logic.foodHint(r.food, "en-IN") : ""}`;
+    const del = el("button", { className: "danger", textContent: "Delete" });
+    del.onclick = () => { state.reminders = state.reminders.filter(x => x.id !== r.id); save(); };
+    return el("div", { className: "slot" },
+      el("div", {}, el("span", { className: "tag", textContent: r.category }), el("strong", { textContent: r.title }),
+        el("div", { className: "meta", textContent: [when, personName(r.personId), r.amount != null ? `₹${r.amount}` : ""].filter(Boolean).join(" · ") })),
+      del);
+  }));
+}
+
+// ---------- summary ----------
+$("summaryBtn").onclick = async () => {
+  const slots = todaySlots().filter(s => Logic.statusOf(s, state.doses) !== "taken");
+  const lang = state.reminders.find(r => r.lang)?.lang || "hi-IN";
+  const text = slots.length
+    ? "Aaj ke kaam: " + slots.map(s => `${fmtTime(s.at)} par ${s.title}`).join(", ") + "."
+    : "Aaj ke saare kaam ho gaye. Bahut badhiya!";
+  setStatus("Bol raha hoon...");
+  try { await speak(text, lang); setStatus(""); } catch (e) { setStatus("Awaz nahi chali: " + e.message); }
+};
+
+// ---------- backup ----------
 $("exportBtn").onclick = () => {
-  const blob = new Blob([JSON.stringify(reminders, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `reminders-${toLocalInput(new Date()).slice(0, 10)}.json`;
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = el("a", { href: URL.createObjectURL(blob), download: `reminders-${Logic.todayStr()}.json` });
   a.click();
   URL.revokeObjectURL(a.href);
 };
-
 $("importFile").onchange = async e => {
   const file = e.target.files[0];
   if (!file) return;
   try {
-    const incoming = JSON.parse(await file.text());
-    if (!Array.isArray(incoming) || !incoming.every(r => r && typeof r.title === "string" && typeof r.due === "string")) {
-      throw new Error("File format sahi nahi hai.");
-    }
-    const ids = new Set(reminders.map(r => r.id));
-    reminders.push(...incoming.filter(r => !ids.has(r.id)));
-    setStatus(`${incoming.length} reminders restore hue.`);
-    persist();
+    const s = JSON.parse(await file.text());
+    if (!s || !Array.isArray(s.people) || !Array.isArray(s.reminders)) throw new Error("File format sahi nahi hai.");
+    state = { doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode(), ...s };
+    setStatus("Backup restore ho gaya.");
+    save();
   } catch (err) { setStatus("Restore nahi hua: " + err.message); }
   e.target.value = "";
 };
 
-function init() {
-  if (!key) $("setup").hidden = false;
-  $("saveKey").onclick = () => {
-    key = $("keyInput").value.trim();
-    localStorage.setItem("sarvam_key", key);
-    $("setup").hidden = Boolean(key);
-    setStatus(key ? "Key save ho gayi." : "Key khaali hai.");
-  };
-  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
-  render();
-  setInterval(checkDue, 15000);
-  checkDue();
+// ---------- reminders firing ----------
+async function announce(slot) {
+  const r = state.reminders.find(x => x.id === slot.reminderId);
+  const lang = r?.lang || "hi-IN";
+  const who = activeMembers().length > 1 ? personName(slot.personId) + ", " : "";
+  const text = `${who}${slot.title}. ${Logic.foodHint(slot.food, lang)}`.trim();
+  if ("Notification" in window && Notification.permission === "granted") new Notification("Reminder", { body: text });
+  if (key) { try { await speak(text, lang); } catch (e) { setStatus("Awaz nahi chali: " + e.message); } }
 }
-init();
+
+async function tick() {
+  const now = new Date();
+  const ids = new Set(activeMembers().map(p => p.id));
+  const mine = state.reminders.filter(r => ids.has(r.personId));
+  let changed = false;
+  for (const slot of Logic.dueNow(mine, state.notified, now)) {
+    state.notified[slot.key] = true; changed = true;
+    if (!state.doses[slot.key]) await announce(slot);
+  }
+  for (const [k, until] of Object.entries(state.snoozes)) {
+    if (now.getTime() >= until) {
+      delete state.snoozes[k]; delete state.doses[k]; changed = true;
+      const slot = todaySlots().find(s => s.key === k);
+      if (slot) await announce(slot);
+    }
+  }
+  changed ? save() : render(); // re-render so "missed" states and alerts stay current
+}
+
+// ---------- init ----------
+document.querySelectorAll(".tabs button").forEach(b => { b.onclick = () => setMode(b.dataset.mode); });
+$("saveKey").onclick = () => {
+  key = $("keyInput").value.trim();
+  localStorage.setItem("sarvam_key", key);
+  setStatus(key ? "Key save ho gayi." : "Key khaali hai.");
+  render();
+};
+if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+render();
+setInterval(tick, 30000);
+tick();
 </script>
 </body>
 </html>

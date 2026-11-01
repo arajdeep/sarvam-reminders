@@ -1,7 +1,7 @@
 // Pure scheduling and alert logic. No DOM, no network: testable with `node --test`.
 (function (root) {
   const FOOD_OFFSET = { before: -30, after: 20, with: 0, any: 0 }; // minutes from the scheduled time
-  const CATEGORIES = ["medicine", "meal", "bill", "payment", "other"];
+  const CATEGORIES = ["medicine", "meal", "bill", "payment", "appointment", "other"];
   const REPEATS = ["none", "daily", "monthly"];
   const GRACE_MIN = 60;          // a dose is "missed" after this many minutes
   const CHECKIN_DEADLINE = 11;   // hour after which a silent check-in raises a watch alert

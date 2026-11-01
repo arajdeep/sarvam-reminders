@@ -96,6 +96,25 @@ test("dueNow announces each slot once, inside a 15-minute window", () => {
   assert.equal(L.dueNow([r], {}, at(8, 20)).length, 0);
 });
 
+test("appointments (vaccines, doctor visits) are date-based and keep their category", () => {
+  const r = L.normalizeParsed({ title: "Polio vaccine", kind: "bill", category: "appointment", dueDate: "2026-11-10" }, DAY);
+  assert.equal(r.category, "appointment");
+  assert.equal(L.slotsForDay({ ...r, id: "v1", personId: "b1" }, "2026-11-10").length, 1);
+});
+
+test("care home: alerts cover every resident, never staff", () => {
+  const state = {
+    people: [{ id: "r1", name: "Sharma ji", role: "resident" }, { id: "r2", name: "Kamla ji", role: "resident" },
+             { id: "s1", name: "Nurse Priya", role: "caregiver" }],
+    reminders: [med({ id: "a", personId: "r1", food: "any", times: ["08:00"] }),
+                med({ id: "b", personId: "r2", food: "any", times: ["08:00"] })],
+    doses: { [`a|${DAY}|08:00`]: "taken" }, checkins: { [`r1|${DAY}`]: "ok", [`r2|${DAY}`]: "ok" },
+  };
+  const alerts = L.collectAlerts(state, at(12));
+  assert.equal(alerts.length, 1);
+  assert.equal(alerts[0].personId, "r2");
+});
+
 test("addDays crosses month and year boundaries", () => {
   assert.equal(L.addDays("2026-12-31", 1), "2027-01-01");
   assert.equal(L.addDays("2026-03-01", -1), "2026-02-28");
