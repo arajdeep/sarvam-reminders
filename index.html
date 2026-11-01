@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sarvam Reminders</title>
+<style>
+  :root { --green: #1a7f4b; --red: #c0392b; --ink: #1d1d1f; --muted: #6b6b6b; --line: #e3e3e3; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); margin: 0; background: #fafaf8; }
+  main { max-width: 640px; margin: 0 auto; padding: 1.25rem; }
+  h1 { font-size: 1.6rem; margin: .5rem 0 .25rem; }
+  h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+  p.hint { color: var(--muted); margin: .25rem 0 1rem; font-size: .95rem; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1rem; margin-bottom: .75rem; }
+  input, select, textarea { font: inherit; width: 100%; padding: .6rem .7rem; border: 1px solid #cfcfcf; border-radius: 8px; background: #fff; }
+  .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .row > * { flex: 1 1 140px; }
+  button { font: inherit; padding: .6rem 1rem; border: none; border-radius: 8px; background: var(--green); color: #fff; cursor: pointer; }
+  button.secondary { background: #eee; color: var(--ink); }
+  button.danger { background: var(--red); }
+  button:disabled { opacity: .5; cursor: default; }
+  #mic { width: 100%; padding: 1rem; font-size: 1.15rem; border-radius: 999px; }
+  #mic.rec { background: var(--red); }
+  .meta { color: var(--muted); font-size: .9rem; margin-top: .25rem; }
+  .tag { display: inline-block; font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; background: #eef5f0; color: var(--green); margin-right: .35rem; }
+  .done { opacity: .55; text-decoration: line-through; }
+  .due { border-left: 4px solid var(--red); }
+  #status { min-height: 1.25rem; color: var(--muted); margin: .5rem 0; font-size: .95rem; }
+  .actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
+  footer { color: var(--muted); font-size: .85rem; margin: 2rem 0; }
+  @media (max-width: 420px) { h1 { font-size: 1.35rem; } main { padding: .9rem; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Reminders</h1>
+  <p class="hint">Bolkar ya likhkar reminder banaiye. Bill, dawai aur payment ki yaad dilaaye, apni bhasha mein.</p>
+
+  <section id="setup" class="card" hidden>
+    <strong>Sarvam API key</strong>
+    <p class="hint">Apni key daalein. Yeh sirf is browser mein save hogi.</p>
+    <div class="row">
+      <input id="keyInput" type="password" placeholder="Sarvam API key" autocomplete="off">
+      <button id="saveKey">Save</button>
+    </div>
+  </section>
+
+  <section id="compose" class="card">
+    <button id="mic">🎤 Bolo</button>
+    <div class="row" style="margin-top:.75rem">
+      <input id="typed" placeholder="Ya likhein: kal subah 8 baje bijli ka bill bharna">
+      <button id="parseBtn" class="secondary">Samjhao</button>
+    </div>
+    <div id="draft" hidden style="margin-top:1rem">
+      <div class="row">
+        <input id="dTitle" placeholder="Title">
+        <select id="dCategory">
+          <option value="bill">Bill</option><option value="medicine">Dawai</option>
+          <option value="payment">Payment</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="row" style="margin-top:.5rem">
+        <input id="dDue" type="datetime-local">
+        <select id="dRepeat">
+          <option value="none">Ek baar</option><option value="daily">Roz</option><option value="monthly">Har mahine</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button id="saveDraft">Save reminder</button>
+        <button id="cancelDraft" class="secondary">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="status"></div>
+
+  <h2>Aapke reminders</h2>
+  <div id="list"></div>
+
+  <section class="card">
+    <strong>Backup</strong>
+    <p class="hint">Reminders ek file mein save karein, ya doosre phone par wapas laayein.</p>
+    <div class="actions">
+      <button id="exportBtn" class="secondary">Download backup</button>
+      <label class="secondary" style="padding:.6rem 1rem;border-radius:8px;cursor:pointer;background:#eee">
+        Restore file <input id="importFile" type="file" accept="application/json" hidden>
+      </label>
+    </div>
+  </section>
+
+  <footer>Reminders is browser ke khule rehne par chalte hain. Speech aur samajh Sarvam AI se hoti hai.</footer>
+</main>
+
+<script>
+const API = "https://api.sarvam.ai";
+const LANGS = ["hi-IN","bn-IN","gu-IN","kn-IN","ml-IN","mr-IN","od-IN","pa-IN","ta-IN","te-IN","en-IN"];
+const $ = id => document.getElementById(id);
+let key = localStorage.getItem("sarvam_key") || "";
+let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+let draft = null, recorder = null, chunks = [];
+
+function setStatus(msg) { $("status").textContent = msg || ""; }
+function persist() { localStorage.setItem("reminders", JSON.stringify(reminders)); render(); }
+
+async function call(path, options) {
+  const res = await fetch(API + path, { ...options, headers: { "api-subscription-key": key, ...(options.headers || {}) } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error?.message || data?.message || `HTTP ${res.status}`);
+  return data;
+}
+
+async function transcribe(blob) {
+  const form = new FormData();
+  form.append("file", new File([blob], "speech.webm", { type: blob.type }));
+  form.append("model", "saaras:v3");
+  form.append("mode", "transcribe");
+  const data = await call("/speech-to-text", { method: "POST", body: form });
+  return data.transcript || "";
+}
+
+async function parseText(text) {
+  const now = new Date();
+  const system = `You turn a reminder request into JSON. Today is ${now.toString()}. The user's timezone is Asia/Kolkata.
+Reply ONLY with a JSON object: {"title": string, "category": "bill"|"medicine"|"payment"|"other", "due": "YYYY-MM-DDTHH:MM" (24h, local time), "repeat": "none"|"daily"|"monthly", "lang": one of ${LANGS.join(", ")}}.
+The title must be in the same language as the request. If only a time is given, pick the next future occurrence.`;
+  const data = await call("/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "sarvam-105b",
+      messages: [{ role: "system", content: system }, { role: "user", content: text }],
+      response_format: { type: "json_object" },
+      temperature: 0,
+      max_tokens: 1500,
+    }),
+  });
+  return JSON.parse(data.choices[0].message.content);
+}
+
+async function speak(text, lang) {
+  const data = await call("/text-to-speech", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, language_code: LANGS.includes(lang) ? lang : "hi-IN",
+      speaker: "shubh", model: "bulbul:v3", output_audio_codec: "wav" }),
+  });
+  new Audio("data:audio/wav;base64," + data.audios[0]).play();
+}
+
+function showDraft(d) {
+  draft = d;
+  $("dTitle").value = d.title || "";
+  $("dCategory").value = d.category || "other";
+  $("dDue").value = (d.due || "").slice(0, 16);
+  $("dRepeat").value = d.repeat || "none";
+  $("draft").hidden = false;
+}
+
+async function understand(text) {
+  setStatus("Samajh raha hoon...");
+  try {
+    showDraft(await parseText(text));
+    setStatus("Check karke Save kijiye.");
+  } catch (e) { setStatus("Error: " + e.message); }
+}
+
+$("parseBtn").onclick = () => { if ($("typed").value.trim()) understand($("typed").value.trim()); };
+
+$("mic").onclick = async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  if (!key) return setStatus("Pehle API key daalein.");
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { return setStatus("Microphone ki permission dijiye."); }
+  chunks = [];
+  recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    $("mic").className = ""; $("mic").textContent = "🎤 Bolo";
+    setStatus("Sun raha hoon...");
+    try {
+      const text = await transcribe(new Blob(chunks, { type: recorder.mimeType }));
+      if (!text.trim()) return setStatus("Kuch sunai nahi diya. Phir se boliye.");
+      $("typed").value = text;
+      await understand(text);
+    } catch (e) { setStatus("Error: " + e.message); }
+  };
+  recorder.start();
+  $("mic").className = "rec"; $("mic").textContent = "⏹ Ruko";
+  setStatus("Recording... boliye.");
+};
+
+$("saveDraft").onclick = () => {
+  const due = $("dDue").value;
+  const title = $("dTitle").value.trim();
+  if (!title || !due) return setStatus("Title aur time dono zaroori hain.");
+  reminders.push({ id: Date.now(), title, category: $("dCategory").value, due: due,
+    repeat: $("dRepeat").value, lang: draft?.lang || "hi-IN", done: false, notified: false });
+  draft = null; $("draft").hidden = true; $("typed").value = "";
+  setStatus("Reminder save ho gaya.");
+  persist();
+};
+$("cancelDraft").onclick = () => { draft = null; $("draft").hidden = true; setStatus(""); };
+
+// Local "YYYY-MM-DDTHH:MM" (no UTC shift, unlike toISOString).
+function toLocalInput(d) {
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function advance(r) {
+  const d = new Date(r.due);
+  if (r.repeat === "daily") d.setDate(d.getDate() + 1);
+  else if (r.repeat === "monthly") d.setMonth(d.getMonth() + 1);
+  else return false;
+  r.due = toLocalInput(d);
+  r.notified = false;
+  return true;
+}
+
+function render() {
+  const list = $("list");
+  list.replaceChildren();
+  const sorted = [...reminders].sort((a, b) => a.due.localeCompare(b.due));
+  if (!sorted.length) { list.textContent = "Abhi koi reminder nahi hai."; return; }
+  for (const r of sorted) {
+    const card = document.createElement("div");
+    const overdue = !r.done && new Date(r.due) <= new Date();
+    card.className = "card" + (r.done ? " done" : "") + (overdue ? " due" : "");
+    const title = document.createElement("strong");
+    title.textContent = r.title;
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${r.due.replace("T", " ")} · ${r.repeat === "none" ? "ek baar" : r.repeat}`;
+    const tag = document.createElement("span");
+    tag.className = "tag"; tag.textContent = r.category;
+    card.append(tag, title, meta);
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const done = document.createElement("button");
+    done.className = "secondary";
+    done.textContent = r.done ? "Undo" : "Ho gaya";
+    done.onclick = () => { r.done = !r.done; r.notified = r.done; persist(); };
+    const del = document.createElement("button");
+    del.className = "danger"; del.textContent = "Delete";
+    del.onclick = () => { reminders = reminders.filter(x => x.id !== r.id); persist(); };
+    actions.append(done, del);
+    card.append(actions);
+    list.append(card);
+  }
+}
+
+// Check for due reminders while the page is open.
+async function checkDue() {
+  const now = new Date();
+  for (const r of reminders) {
+    if (r.done || r.notified || new Date(r.due) > now) continue;
+    r.notified = true;
+    // Skip old reminders (e.g. missed while the page was closed) instead of blurting them out.
+    const late = now - new Date(r.due) > 10 * 60 * 1000;
+    if (!late) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Reminder", { body: r.title });
+      }
+      if (key) {
+        try { await speak(r.title, r.lang); } catch (e) { setStatus("Awaz nahi chali: " + e.message); }
+      }
+    }
+    if (r.repeat !== "none") advance(r); else r.done = true;
+  }
+  persist();
+}
+
+$("exportBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify(reminders, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `reminders-${toLocalInput(new Date()).slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+$("importFile").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const incoming = JSON.parse(await file.text());
+    if (!Array.isArray(incoming) || !incoming.every(r => r && typeof r.title === "string" && typeof r.due === "string")) {
+      throw new Error("File format sahi nahi hai.");
+    }
+    const ids = new Set(reminders.map(r => r.id));
+    reminders.push(...incoming.filter(r => !ids.has(r.id)));
+    setStatus(`${incoming.length} reminders restore hue.`);
+    persist();
+  } catch (err) { setStatus("Restore nahi hua: " + err.message); }
+  e.target.value = "";
+};
+
+function init() {
+  if (!key) $("setup").hidden = false;
+  $("saveKey").onclick = () => {
+    key = $("keyInput").value.trim();
+    localStorage.setItem("sarvam_key", key);
+    $("setup").hidden = Boolean(key);
+    setStatus(key ? "Key save ho gayi." : "Key khaali hai.");
+  };
+  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+  render();
+  setInterval(checkDue, 15000);
+  checkDue();
+}
+init();
+</script>
+</body>
+</html>
