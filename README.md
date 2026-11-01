@@ -6,7 +6,7 @@ Voice-first reminders for medicines, meals, bills and appointments, in Indian la
 Someone living alone in a tier-3 town has medicines to take before or after food, bills to pay on time, and family far away who worry. Existing reminder apps assume typing, English, and one user.
 
 ## MVP (what works today)
-- **Pick your language first**, shown in its own script: English, हिन्दी, বাংলা, मराठी, தமிழ், తెలుగు, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ. English and Hindi are written by hand; the others are translated by Sarvam once and cached on the device.
+- **Pick your language first:** English plus all 22 languages of the Eighth Schedule, each shown in its own script with its English name. Urdu, Kashmiri and Sindhi display right-to-left. English and Hindi are written by hand; the others are translated by Sarvam once and cached on the device. Spoken alerts are available in the 11 languages Bulbul supports; the rest get text and notifications.
 - **Then pick who it's for:** just me, my family, me and my partner, or a care home.
 - **Speak or type** a reminder in your language ("roz subah 8 baje BP ki goli khane ke baad"). Sarvam understands it and fills the form; you confirm.
 - **Food timing:** before food alerts 30 min early, after food 20 min late.
@@ -32,13 +32,17 @@ Someone living alone in a tier-3 town has medicines to take before or after food
 - **Bulbul v3** text-to-speech for alerts and the daily summary
 
 ## Run it
-Open `index.html` from any static host (Vercel, GitHub Pages) and paste your own Sarvam API key. The key stays in that browser; this repo contains no key.
+**On Vercel (recommended):** import this repo, then add an environment variable `SARVAM_API_KEY` (Project → Settings → Environment Variables) and redeploy. Users then need no key at all: the page calls `/api/sarvam`, which adds the key on the server.
+
+The proxy only allows the three endpoints the app uses, the exact models (`sarvam-105b`, `bulbul:v3`), capped sizes and tokens, and 40 requests per IP per 10 minutes. The rate limit is per server instance, so treat it as best effort, not a hard budget.
+
+**Elsewhere:** any static host works if each user pastes their own key under More settings. This repo contains no key.
 
 ## Tests
 ```
-node --test tests/logic.test.js
+node --test tests/logic.test.js tests/proxy.test.mjs
 ```
-13 tests cover parsing safety, food timing, missed doses, streaks, bills, and family and care-home alerts.
+19 tests cover parsing safety, food timing, missed doses, streaks, bills, family and care-home alerts, and the key proxy (allowed endpoints, model checks, size caps, rate limit).
 
 ## Limits of this proof of concept
 - Data lives in one browser. Family, couples and care-home members share one screen; syncing across phones needs a backend.

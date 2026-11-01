@@ -233,7 +233,8 @@ function t(k, vars = {}) {
   return s.replace(/\{(\w+)\}/g, (_, v) => (v in vars ? vars[v] : ""));
 }
 function applyStatic() {
-  document.documentElement.lang = (state.lang || "en-IN").slice(0, 2);
+  document.documentElement.lang = (state.lang || "en-IN").split("-")[0];
+  document.documentElement.dir = I18n.LANGS[state.lang]?.rtl ? "rtl" : "ltr";
   document.querySelectorAll("[data-t]").forEach(n => { n.textContent = t(n.dataset.t); });
   document.querySelectorAll("[data-tp]").forEach(n => { n.placeholder = t(n.dataset.tp); });
   document.title = t("app_title");
@@ -245,7 +246,6 @@ async function loadLanguage(lang) {
   const cached = localStorage.getItem(cacheKey);
   if (cached) { try { dict = I18n.validateTranslation(JSON.parse(cached)); return; } catch {} }
   dict = I18n.EN;
-  if (!key) { setTimeout(() => setStatus(t("translate_needs_key")), 0); return; } // translate once a key is added
   setStatus(t("translating"));
   try {
     const name = I18n.LANGS[lang].english;
@@ -263,7 +263,7 @@ async function loadLanguage(lang) {
     setStatus("");
   } catch (e) {
     dict = I18n.EN;
-    setStatus(t("translate_failed"));
+    setTimeout(() => setStatus(/key/i.test(e.message) ? t("translate_needs_key") : t("translate_failed")), 0);
   }
 }
 
@@ -312,9 +312,14 @@ function activeMembers() {
 }
 
 // ---------- Sarvam ----------
+// With a personal key, call Sarvam directly; otherwise go through this site's server (/api/sarvam).
 async function call(path, options) {
-  if (!key) throw new Error(t("key_needed"));
-  const res = await fetch(API + path, { ...options, headers: { "api-subscription-key": key, ...(options.headers || {}) } });
+  const direct = Boolean(key);
+  const url = direct ? API + path : "/api/sarvam?path=" + encodeURIComponent(path.replace(/^\//, ""));
+  const headers = { ...(options.headers || {}) };
+  if (direct) headers["api-subscription-key"] = key;
+  const res = await fetch(url, { ...options, headers });
+  if (!direct && (res.status === 404 || res.status === 501)) throw new Error(t("key_needed"));
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error?.message || data?.message || `HTTP ${res.status}`);
   return data;
@@ -354,9 +359,10 @@ Reply ONLY with a JSON object with keys:
   return { ...clean, lang: LANG_CODES.includes(clean.lang) ? clean.lang : state.lang, personId: (match || activeMembers()[0]).id };
 }
 async function speak(text, lang) {
+  if (!I18n.LANGS[lang]?.tts) throw new Error(t("voice_unavailable"));
   const data = await call("/text-to-speech", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: text.slice(0, 1500), language_code: LANG_CODES.includes(lang) ? lang : "en-IN",
+    body: JSON.stringify({ text: text.slice(0, 1500), language_code: lang,
       speaker: "shubh", model: "bulbul:v3", output_audio_codec: "wav" }),
   });
   await new Audio("data:audio/wav;base64," + data.audios[0]).play();
@@ -370,8 +376,10 @@ function renderOnboard() {
   $("stepMode").hidden = onboardStep !== "mode";
   $("stepKey").hidden = onboardStep !== "key";
   $("langGrid").replaceChildren(...LANG_CODES.map(code => {
-    const b = el("button", { textContent: I18n.LANGS[code].native, lang: code.slice(0, 2),
-      className: state.lang === code ? "on" : "" });
+    const info = I18n.LANGS[code];
+    const b = el("button", { lang: code.split("-")[0], dir: info.rtl ? "rtl" : "ltr", className: state.lang === code ? "on" : "" },
+      el("div", { textContent: info.native }),
+      code === "en-IN" ? null : el("div", { className: "meta", style: "font-size:.8rem", textContent: info.english }));
     b.onclick = async () => {
       state.lang = code; await loadLanguage(code);
       onboardStep = state.mode ? "done" : "mode"; // changing language later goes straight back to the app
@@ -382,7 +390,7 @@ function renderOnboard() {
   $("modeList").replaceChildren(...["solo", "family", "couples", "care"].map(m => {
     const b = el("button", { className: "choice" + (state.mode === m ? " on" : "") },
       el("strong", { textContent: t("mode_" + m) }), el("span", { textContent: t("mode_" + m + "_desc") }));
-    b.onclick = () => { setMode(m); onboardStep = key || state.keyAsked ? "done" : "key"; save(); };
+    b.onclick = () => { setMode(m); onboardStep = "done"; save(); };
     return b;
   }));
 }
@@ -431,7 +439,6 @@ $("typed").onkeydown = e => { if (e.key === "Enter") $("addBtn").click(); };
 
 $("mic").onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-  if (!key) return setStatus(t("key_needed"));
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
   catch { return setStatus(t("mic_permission")); }
@@ -680,7 +687,7 @@ $("summaryBtn").onclick = async () => {
     ? t("summary_left", { items: left.map(s => `${fmtTime(s.at)} ${s.title}`).join(", ") })
     : t("summary_done");
   setStatus("🔊");
-  try { await speak(text, state.lang); setStatus(""); } catch (e) { setStatus(t("voice_failed") + " " + errText(e)); }
+  try { await speak(text, state.lang); setStatus(""); } catch (e) { setStatus(errText(e)); }
 };
 $("saveKey").onclick = async () => {
   key = $("keyInput").value.trim();
@@ -712,7 +719,7 @@ async function announce(slot) {
   const text = [multi ? personName(slot.personId) : "", slot.title, slot.food !== "any" ? t("food_" + slot.food) : ""]
     .filter(Boolean).join(". ");
   if ("Notification" in window && Notification.permission === "granted") new Notification(t("reminder"), { body: text });
-  if (key) { try { await speak(text, state.lang); } catch { setStatus(t("voice_failed")); } }
+  try { await speak(text, state.lang); } catch (e) { setStatus(errText(e)); }
 }
 async function tick() {
   if (!state.mode) return;
