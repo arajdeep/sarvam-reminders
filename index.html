@@ -243,7 +243,7 @@ function applyStatic() {
   document.title = t("app_title");
 }
 
-const CACHE_VERSION = "v2"; // bump when interface strings change
+const CACHE_VERSION = "v3"; // bump when interface strings change
 // Text we can show right now, without waiting on the network.
 function cachedDict(lang) {
   if (!lang) return null;
@@ -258,25 +258,18 @@ async function loadLanguage(lang) {
   const ready = cachedDict(lang);
   if (ready) { if (state.lang === lang) dict = ready; return; }
   const cacheKey = `ui_${lang}_${CACHE_VERSION}`;
-  setStatus(t("translating"));
+  // Normal path: a translation pre-built with Sarvam and shipped with the site (lang/<code>.json). Fast and free.
   try {
-    const name = I18n.LANGS[lang].english;
-    const data = await call("/v1/chat/completions", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "sarvam-105b", temperature: 0, max_tokens: 12000,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: `Translate every value of this JSON object into simple, everyday ${name} written in ${name} script, as used by ordinary people in small towns. Keep every key unchanged. Keep {placeholders}, emoji, "Sarvam AI", "API key", "WhatsApp", "BP" and times like 08:00 exactly as they are. Reply ONLY with the JSON object.` },
-          { role: "user", content: JSON.stringify(I18n.EN) }] }),
-    });
-    const translated = I18n.validateTranslation(JSON.parse(data.choices?.[0]?.message?.content || "{}"));
-    localStorage.setItem(cacheKey, JSON.stringify(translated));
-    if (state.lang === lang) dict = translated; // ignore if the user switched language meanwhile
-    setStatus("");
-  } catch (e) {
-    if (state.lang === lang) dict = I18n.EN;
-    setTimeout(() => setStatus(/key/i.test(e.message) ? t("translate_needs_key") : t("translate_failed")), 0);
-  }
+    const res = await fetch(`lang/${lang}.json`, { cache: "no-cache" });
+    if (res.ok) {
+      const shipped = I18n.validateTranslation(await res.json());
+      localStorage.setItem(cacheKey, JSON.stringify(shipped));
+      if (state.lang === lang) { dict = shipped; setStatus(""); }
+      return;
+    }
+  } catch {}
+  // No shipped translation yet: show English straight away rather than a slow live translation.
+  if (state.lang === lang) { dict = I18n.EN; setTimeout(() => setStatus(t("translate_failed")), 0); }
 }
 
 // ---------- state ----------
@@ -400,7 +393,7 @@ function renderOnboard() {
       dict = cachedDict(code) || I18n.EN; // show the app immediately; translate in the background
       onboardStep = state.mode ? "done" : "mode"; // changing language later goes straight back to the app
       save();
-      if (!cachedDict(code)) { setStatus(t("translating")); loadLanguage(code).then(render); }
+      if (!cachedDict(code)) loadLanguage(code).then(render);
     };
     return b;
   }));
