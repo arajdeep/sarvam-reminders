@@ -326,7 +326,10 @@ async function call(path, options) {
 }
 async function transcribe(blob) {
   const form = new FormData();
-  form.append("file", new File([blob], "speech.webm", { type: blob.type || "audio/webm" }));
+  // Browsers label recordings like "audio/webm;codecs=opus"; Sarvam accepts only the bare type.
+  const type = (blob.type || "audio/webm").split(";")[0].trim();
+  const ext = { "audio/webm": "webm", "audio/mp4": "m4a", "audio/ogg": "ogg", "audio/wav": "wav" }[type] || "webm";
+  form.append("file", new File([blob], `speech.${ext}`, { type }));
   form.append("model", "saaras:v3");
   form.append("mode", "transcribe");
   return (await call("/speech-to-text", { method: "POST", body: form })).transcript || "";
