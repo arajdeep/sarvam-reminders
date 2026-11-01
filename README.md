@@ -6,6 +6,8 @@ Voice-first reminders for medicines, meals, bills and appointments, in Indian la
 Someone living alone in a tier-3 town has medicines to take before or after food, bills to pay on time, and family far away who worry. Existing reminder apps assume typing, English, and one user.
 
 ## MVP (what works today)
+- **Pick your language first**, shown in its own script: English, हिन्दी, বাংলা, मराठी, தமிழ், తెలుగు, ગુજરાતી, ಕನ್ನಡ, മലയാളം, ਪੰਜਾਬੀ, ଓଡ଼ିଆ. English and Hindi are written by hand; the others are translated by Sarvam once and cached on the device.
+- **Then pick who it's for:** just me, my family, me and my partner, or a care home.
 - **Speak or type** a reminder in your language ("roz subah 8 baje BP ki goli khane ke baad"). Sarvam understands it and fills the form; you confirm.
 - **Food timing:** before food alerts 30 min early, after food 20 min late.
 - **Spoken alerts** in the reminder's language, plus browser notifications.
@@ -26,7 +28,7 @@ Someone living alone in a tier-3 town has medicines to take before or after food
 
 ## Sarvam APIs used
 - **Saaras v3** speech-to-text (code-mixed speech)
-- **sarvam-105b** chat with JSON output, validated in code before saving
+- **sarvam-105b** chat with JSON output, validated in code before saving (reminder understanding and interface translation)
 - **Bulbul v3** text-to-speech for alerts and the daily summary
 
 ## Run it

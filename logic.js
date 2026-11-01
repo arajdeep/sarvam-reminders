@@ -30,7 +30,7 @@
     const r = raw || {};
     const kind = r.kind === "bill" ? "bill" : "schedule";
     const title = String(r.title || "").trim().slice(0, 120);
-    if (!title) throw new Error("Reminder ka title nahi mila.");
+    if (!title) throw new Error("missing_title");
 
     const amountNum = r.amount === null || r.amount === undefined || r.amount === "" ? NaN : Number(r.amount);
     const out = {
@@ -47,13 +47,13 @@
 
     if (kind === "bill") {
       const due = String(r.dueDate || "");
-      if (!DATE_RE.test(due)) throw new Error("Bill ki due date nahi mili.");
+      if (!DATE_RE.test(due)) throw new Error("missing_date");
       out.dueDate = due;
       out.times = [];
     } else {
       const times = Array.isArray(r.times) ? r.times.map(String).filter(t => TIME_RE.test(t)) : [];
       const unique = [...new Set(times)].sort();
-      if (!unique.length) throw new Error("Dawai ka time nahi mila (HH:MM).");
+      if (!unique.length) throw new Error("missing_time");
       out.times = unique;
       out.repeat = out.repeat === "none" ? "daily" : out.repeat; // schedules recur by default
     }
@@ -118,17 +118,14 @@
 
     for (const person of cared) {
       const answer = checkins[`${person.id}|${date}`];
-      if (answer === "help") alerts.push({ level: "urgent", personId: person.id, message: `${person.name}: madad chahiye` });
-      else if (answer === "unwell") alerts.push({ level: "watch", personId: person.id, message: `${person.name}: thoda theek nahi` });
-      else if (!answer && now.getHours() >= CHECKIN_DEADLINE) {
-        alerts.push({ level: "watch", personId: person.id, message: `${person.name}: aaj ka check-in abhi nahi aaya` });
-      }
+      const base = { personId: person.id, name: person.name };
+      if (answer === "help") alerts.push({ ...base, level: "urgent", type: "help" });
+      else if (answer === "unwell") alerts.push({ ...base, level: "watch", type: "unwell" });
+      else if (!answer && now.getHours() >= CHECKIN_DEADLINE) alerts.push({ ...base, level: "watch", type: "silent" });
 
       for (const r of reminders.filter(x => x.personId === person.id)) {
         for (const slot of slotsForDay(r, date)) {
-          if (statusOf(slot, doses, now) === "missed") {
-            alerts.push({ level: "watch", personId: person.id, message: `${person.name}: ${slot.title} miss hui` });
-          }
+          if (statusOf(slot, doses, now) === "missed") alerts.push({ ...base, level: "watch", type: "missed", title: slot.title });
         }
       }
     }
@@ -149,16 +146,10 @@
     return out;
   }
 
-  function foodHint(food, lang) {
-    const hi = { before: "khane se pehle", after: "khane ke baad", with: "khane ke saath", any: "" };
-    const en = { before: "before food", after: "after food", with: "with food", any: "" };
-    return (lang === "hi-IN" ? hi : en)[food] ?? "";
-  }
-
   const Logic = {
     FOOD_OFFSET, CATEGORIES, GRACE_MIN, CHECKIN_DEADLINE,
     todayStr, addDays, localDate, normalizeParsed, slotsForDay,
-    statusOf, markDose, streak, collectAlerts, dueNow, foodHint,
+    statusOf, markDose, streak, collectAlerts, dueNow,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = Logic;
   else root.Logic = Logic;

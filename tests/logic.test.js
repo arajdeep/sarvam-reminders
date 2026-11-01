@@ -78,13 +78,13 @@ test("family alerts: help is urgent, silent check-in after 11, missed dose", () 
     reminders: [med({ food: "any", times: ["08:00"] })], doses: {}, checkins: {},
   };
   const quiet = L.collectAlerts(state, at(12));
-  assert.ok(quiet.some(a => a.message.includes("check-in")));
-  assert.ok(quiet.some(a => a.message.includes("miss")));
+  assert.ok(quiet.some(a => a.type === "silent"));
+  assert.ok(quiet.some(a => a.type === "missed"));
   assert.ok(!quiet.some(a => a.personId === "c1"), "caregivers get no alerts about themselves");
 
   state.checkins[`p1|${DAY}`] = "help";
   assert.equal(L.collectAlerts(state, at(12))[0].level, "urgent");
-  assert.equal(L.collectAlerts({ ...state, checkins: {} }, at(10)).filter(a => a.message.includes("check-in")).length, 0);
+  assert.equal(L.collectAlerts({ ...state, checkins: {} }, at(10)).filter(a => a.type === "silent").length, 0);
 });
 
 test("dueNow announces each slot once, inside a 15-minute window", () => {

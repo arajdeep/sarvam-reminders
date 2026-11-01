@@ -3,197 +3,280 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sarvam Reminders</title>
+<title>Reminders</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a7f4b">
 <style>
-  :root { --green: #1a7f4b; --green-soft: #eef5f0; --red: #c0392b; --amber: #b7791f; --ink: #1d1d1f; --muted: #6b6b6b; --line: #e3e3e3; }
+  :root { --green: #1a7f4b; --green-soft: #eef5f0; --red: #c0392b; --amber: #b7791f; --ink: #1d1d1f; --muted: #5f5f5f; --line: #e3e3e3; }
   * { box-sizing: border-box; }
-  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); margin: 0; background: #fafaf8; }
-  main { max-width: 680px; margin: 0 auto; padding: 1.25rem; }
-  h1 { font-size: 1.6rem; margin: .5rem 0 .25rem; }
-  h2 { font-size: 1.05rem; margin: 0 0 .6rem; }
-  p.hint { color: var(--muted); margin: .25rem 0 .75rem; font-size: .95rem; }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1rem; margin-bottom: .9rem; }
-  input, select { font: inherit; width: 100%; padding: .55rem .7rem; border: 1px solid #cfcfcf; border-radius: 8px; background: #fff; }
-  label.f { display: block; font-size: .85rem; color: var(--muted); }
+  body { font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif; color: var(--ink); margin: 0; background: #fafaf8; font-size: 17px; line-height: 1.45; }
+  main { max-width: 640px; margin: 0 auto; padding: 1.1rem; }
+  h1 { font-size: 1.55rem; margin: .4rem 0 .2rem; }
+  h2 { font-size: 1.1rem; margin: 0 0 .6rem; }
+  p.hint { color: var(--muted); margin: .2rem 0 .8rem; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 1rem; margin-bottom: .9rem; }
+  input, select { font: inherit; width: 100%; padding: .6rem .7rem; border: 1px solid #c9c9c9; border-radius: 10px; background: #fff; }
+  label.f { display: block; font-size: .85rem; color: var(--muted); margin-bottom: .15rem; }
   .row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: end; }
   .row > * { flex: 1 1 150px; }
-  button, .btn { font: inherit; padding: .55rem .95rem; border: none; border-radius: 8px; background: var(--green); color: #fff; cursor: pointer; text-decoration: none; display: inline-block; }
-  .secondary { background: #eee; color: var(--ink); }
+  .row > .fit { flex: 0 0 auto; }
+  button, .btn { font: inherit; padding: .6rem 1rem; border: none; border-radius: 10px; background: var(--green); color: #fff; cursor: pointer; text-decoration: none; display: inline-block; }
+  .secondary { background: #ececec; color: var(--ink); }
   .danger { background: var(--red); }
-  button:disabled { opacity: .5; cursor: default; }
-  #mic { width: 100%; padding: 1rem; font-size: 1.15rem; border-radius: 999px; }
-  #mic.rec { background: var(--red); }
-  .tabs { display: flex; gap: .4rem; margin: .75rem 0 1rem; }
-  .tabs button { flex: 1; background: #eee; color: var(--ink); }
-  .tabs button.on { background: var(--green); color: #fff; }
-  .meta { color: var(--muted); font-size: .9rem; }
-  .tag { display: inline-block; font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; background: var(--green-soft); color: var(--green); margin-right: .35rem; }
-  .slot { display: flex; justify-content: space-between; gap: .75rem; align-items: center; padding: .6rem 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
-  .slot:first-of-type { border-top: none; }
-  .slot .acts { display: flex; gap: .35rem; flex-wrap: wrap; }
+  button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+  .big { width: 100%; padding: 1.05rem; font-size: 1.2rem; border-radius: 999px; }
+  .big.rec { background: var(--red); }
+  .grid { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .grid button { padding: 1rem .6rem; font-size: 1.15rem; background: #fff; color: var(--ink); border: 2px solid var(--line); }
+  .grid button.on { border-color: var(--green); background: var(--green-soft); }
+  .choice { display: block; width: 100%; text-align: left; background: #fff; color: var(--ink); border: 2px solid var(--line); padding: 1rem; margin-bottom: .6rem; }
+  .choice strong { display: block; font-size: 1.15rem; }
+  .choice span { color: var(--muted); }
+  .choice.on { border-color: var(--green); background: var(--green-soft); }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .chips { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .chips button { font-size: .95rem; padding: .45rem .8rem; }
+  .meta { color: var(--muted); font-size: .92rem; }
+  .tag { display: inline-block; font-size: .78rem; padding: .1rem .5rem; border-radius: 999px; background: var(--green-soft); color: var(--green); margin-right: .35rem; }
+  .slot { display: flex; justify-content: space-between; gap: .75rem; align-items: center; padding: .7rem 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .slot:first-child { border-top: none; }
+  .acts { display: flex; gap: .35rem; flex-wrap: wrap; }
   .st-taken { color: var(--green); font-weight: 600; }
   .st-missed { color: var(--red); font-weight: 600; }
   .st-snoozed { color: var(--amber); font-weight: 600; }
-  .alert { padding: .55rem .7rem; border-radius: 8px; margin-bottom: .4rem; display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .alert { padding: .6rem .75rem; border-radius: 10px; margin-bottom: .45rem; display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
   .alert.urgent { background: #fdecea; color: var(--red); font-weight: 600; }
-  .alert.watch { background: #fff6e5; color: #7a5200; }
-  .checkin { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
+  .alert.watch { background: #fff6e5; color: #6b4800; }
   .checkin button.on { outline: 3px solid var(--ink); }
-  .streak { color: var(--green); font-weight: 600; margin-top: .4rem; }
-  #status { min-height: 1.25rem; color: var(--muted); margin: .5rem 0; font-size: .95rem; }
-  .note { font-size: .85rem; color: var(--muted); background: #f3f3f0; border-radius: 8px; padding: .5rem .7rem; margin-top: .6rem; }
+  .streak { color: var(--green); font-weight: 600; margin-top: .5rem; }
+  #status { min-height: 1.4rem; color: var(--muted); margin: .4rem 0 .8rem; }
+  .note { font-size: .88rem; color: var(--muted); background: #f3f3f0; border-radius: 10px; padding: .55rem .75rem; margin-top: .6rem; }
+  details.card > summary { cursor: pointer; font-weight: 600; font-size: 1.05rem; }
+  details.card[open] > summary { margin-bottom: .8rem; }
+  .sub { border-top: 1px solid var(--line); padding-top: .9rem; margin-top: .9rem; }
   footer { color: var(--muted); font-size: .85rem; margin: 1.5rem 0; }
-  @media (max-width: 420px) { h1 { font-size: 1.35rem; } main { padding: .9rem; } .slot { align-items: start; } }
+  [hidden] { display: none !important; }
+  @media (max-width: 420px) { body { font-size: 16px; } main { padding: .85rem; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>Reminders</h1>
-  <p class="hint">Dawai, khana, bill aur payment ki yaad. Boliye ya likhiye, apni bhasha mein.</p>
 
-  <div class="tabs" role="tablist">
-    <button data-mode="solo">Solo</button>
-    <button data-mode="family">Family</button>
-    <button data-mode="couples">Couples</button>
-    <button data-mode="care">Care home</button>
-  </div>
-  <p class="hint" id="modeHint"></p>
-
-  <section id="setup" class="card" hidden>
-    <h2>Sarvam API key</h2>
-    <p class="hint">Apni key daalein. Yeh sirf is browser mein save hogi.</p>
-    <div class="row">
-      <input id="keyInput" type="password" placeholder="Sarvam API key" autocomplete="off">
-      <button id="saveKey" style="flex:0 0 auto">Save</button>
+  <!-- ===== First run: language → who → key ===== -->
+  <section id="onboard" hidden>
+    <div id="stepLang">
+      <h1>Choose your language · अपनी भाषा चुनें</h1>
+      <div id="langGrid" class="grid" style="margin-top:1rem"></div>
     </div>
-  </section>
-
-  <section class="card" id="peopleCard">
-    <h2 id="peopleTitle">Log</h2>
-    <div id="people"></div>
-    <div id="addMember" class="row" style="margin-top:.6rem" hidden>
-      <input id="mName" placeholder="Naam (jaise Dadi, Baby Aarav)">
-      <select id="mProfile" style="flex:0 0 130px">
-        <option value="elder">Bujurg</option><option value="adult">Adult</option>
-        <option value="child">Bachcha</option><option value="baby">Baby</option>
-      </select>
-      <button id="mAdd" class="secondary" style="flex:0 0 auto">Add member</button>
+    <div id="stepMode" hidden>
+      <h1 data-t="who_for"></h1>
+      <div id="modeList" style="margin-top:1rem"></div>
+      <button id="modeBack" class="secondary" data-t="back"></button>
     </div>
-    <div id="addCaregiver" class="row" style="margin-top:.6rem" hidden>
-      <input id="cgName" placeholder="Caregiver ka naam (jaise Ravi)">
-      <button id="cgAdd" class="secondary" style="flex:0 0 auto">Add caregiver</button>
-    </div>
-    <div id="syncNote" class="note" hidden></div>
-  </section>
-
-  <section class="card" id="checkinCard">
-    <h2>Sab theek hai?</h2>
-    <div id="checkins"></div>
-  </section>
-
-  <section class="card" id="boardCard" hidden>
-    <h2>Aaj ka board</h2>
-    <div id="board"></div>
-  </section>
-
-  <section class="card" id="alertsCard" hidden>
-    <h2>Alerts</h2>
-    <div id="alerts"></div>
-  </section>
-
-  <section class="card">
-    <div class="row" style="align-items:center;margin-bottom:.6rem">
-      <div><label class="f">Quick add (bina API call ke)</label><select id="tPerson"></select></div>
-    </div>
-    <div id="templates" class="checkin" style="margin-bottom:.9rem"></div>
-    <button id="mic">🎤 Bolo</button>
-    <div class="row" style="margin-top:.75rem">
-      <input id="typed" placeholder="Jaise: roz subah 8 aur raat 9 baje BP ki goli khane ke baad">
-      <button id="parseBtn" class="secondary" style="flex:0 0 auto">Samjhao</button>
-    </div>
-    <div id="draft" hidden style="margin-top:1rem">
-      <div class="row">
-        <div><label class="f">Kiske liye</label><select id="dPerson"></select></div>
-        <div><label class="f">Title</label><input id="dTitle"></div>
+    <div id="stepKey" hidden>
+      <h1 data-t="key_title"></h1>
+      <p class="hint" data-t="key_hint"></p>
+      <input id="obKey" type="password" autocomplete="off" data-tp="key_placeholder">
+      <div class="row" style="margin-top:.8rem">
+        <button id="obKeySave" class="fit" data-t="save"></button>
+        <button id="obKeyLater" class="fit secondary" data-t="later"></button>
       </div>
-      <div class="row" style="margin-top:.5rem">
-        <div><label class="f">Type</label>
-          <select id="dKind"><option value="schedule">Roz ka schedule</option><option value="bill">Ek date par (bill, vaccine, doctor)</option></select></div>
-        <div><label class="f">Category</label>
-          <select id="dCategory"><option value="medicine">Dawai</option><option value="meal">Khana</option>
-            <option value="bill">Bill</option><option value="payment">Payment</option>
-            <option value="appointment">Doctor / vaccine</option><option value="other">Other</option></select></div>
+    </div>
+  </section>
+
+  <!-- ===== Main app ===== -->
+  <section id="app" hidden>
+    <div class="topbar">
+      <h1 data-t="app_title"></h1>
+      <div class="chips">
+        <button id="langBtn" class="secondary"></button>
+        <button id="modeBtn" class="secondary"></button>
       </div>
-      <div class="row" style="margin-top:.5rem" id="scheduleFields">
-        <div><label class="f">Time (HH:MM, comma se alag)</label><input id="dTimes" placeholder="08:00, 21:00"></div>
-        <div><label class="f">Khane ke saath</label>
-          <select id="dFood"><option value="any">Koi farak nahi</option><option value="before">Khane se pehle (30 min)</option>
-            <option value="after">Khane ke baad (20 min)</option><option value="with">Khane ke saath</option></select></div>
-      </div>
-      <div class="row" style="margin-top:.5rem" id="billFields" hidden>
-        <div><label class="f">Due date</label><input id="dDue" type="date"></div>
-        <div><label class="f">Repeat</label>
-          <select id="dRepeat"><option value="none">Ek baar</option><option value="monthly">Har mahine</option></select></div>
-        <div><label class="f">Amount (₹)</label><input id="dAmount" type="number" min="0"></div>
-      </div>
+    </div>
+    <p class="hint" data-t="tagline"></p>
+
+    <section class="card">
+      <button id="mic" class="big" data-t="speak"></button>
       <div class="row" style="margin-top:.75rem">
-        <button id="saveDraft" style="flex:0 0 auto">Save reminder</button>
-        <button id="cancelDraft" class="secondary" style="flex:0 0 auto">Cancel</button>
+        <input id="typed" data-tp="type_placeholder">
+        <button id="addBtn" class="fit secondary" data-t="add"></button>
       </div>
-    </div>
+      <div id="status" role="status" aria-live="polite"></div>
+
+      <div id="draft" hidden>
+        <div class="row">
+          <div><label class="f" data-t="f_for"></label><select id="dPerson"></select></div>
+          <div><label class="f" data-t="f_title"></label><input id="dTitle"></div>
+        </div>
+        <div class="row" style="margin-top:.5rem">
+          <div><label class="f" data-t="f_kind"></label><select id="dKind">
+            <option value="schedule" data-t="kind_schedule"></option><option value="bill" data-t="kind_date"></option></select></div>
+          <div><label class="f" data-t="f_category"></label><select id="dCategory">
+            <option value="medicine" data-t="cat_medicine"></option><option value="meal" data-t="cat_meal"></option>
+            <option value="bill" data-t="cat_bill"></option><option value="payment" data-t="cat_payment"></option>
+            <option value="appointment" data-t="cat_appointment"></option><option value="other" data-t="cat_other"></option></select></div>
+        </div>
+        <div class="row" style="margin-top:.5rem" id="scheduleFields">
+          <div><label class="f" data-t="f_times"></label><input id="dTimes" placeholder="08:00, 21:00"></div>
+          <div><label class="f" data-t="f_food"></label><select id="dFood">
+            <option value="any" data-t="food_any"></option><option value="before" data-t="food_before"></option>
+            <option value="after" data-t="food_after"></option><option value="with" data-t="food_with"></option></select></div>
+        </div>
+        <div class="row" style="margin-top:.5rem" id="billFields" hidden>
+          <div><label class="f" data-t="f_due"></label><input id="dDue" type="date"></div>
+          <div><label class="f" data-t="f_repeat"></label><select id="dRepeat">
+            <option value="none" data-t="repeat_none"></option><option value="monthly" data-t="repeat_monthly"></option></select></div>
+          <div><label class="f" data-t="f_amount"></label><input id="dAmount" type="number" min="0"></div>
+        </div>
+        <div class="row" style="margin-top:.8rem">
+          <button id="saveDraft" class="fit" data-t="save_reminder"></button>
+          <button id="cancelDraft" class="fit secondary" data-t="cancel"></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="topbar">
+        <h2 style="margin:0" data-t="today"></h2>
+        <button id="summaryBtn" class="secondary" data-t="summary_btn"></button>
+      </div>
+      <div id="today" style="margin-top:.4rem"></div>
+      <div id="streaks"></div>
+    </section>
+
+    <section class="card">
+      <h2 data-t="checkin_title"></h2>
+      <div id="checkins"></div>
+    </section>
+
+    <section class="card" id="boardCard" hidden>
+      <h2 data-t="board_title"></h2>
+      <div id="board"></div>
+    </section>
+
+    <section class="card" id="alertsCard" hidden>
+      <h2 data-t="alerts_title"></h2>
+      <div id="alerts"></div>
+    </section>
+
+    <section class="card">
+      <h2 data-t="quick_title"></h2>
+      <p class="hint" data-t="quick_hint"></p>
+      <select id="tPerson" style="margin-bottom:.6rem"></select>
+      <div id="templates" class="chips"></div>
+    </section>
+
+    <details class="card" id="moreCard">
+      <summary data-t="more"></summary>
+
+      <div>
+        <h2 data-t="people_title"></h2>
+        <div id="people"></div>
+        <div id="addMember" class="row" style="margin-top:.6rem" hidden>
+          <input id="mName" data-tp="name_placeholder">
+          <select id="mProfile" class="fit" style="width:auto">
+            <option value="elder" data-t="prof_elder"></option><option value="adult" data-t="prof_adult"></option>
+            <option value="child" data-t="prof_child"></option><option value="baby" data-t="prof_baby"></option></select>
+          <button id="mAdd" class="fit secondary" data-t="add_member"></button>
+        </div>
+        <div id="addCaregiver" class="row" style="margin-top:.6rem" hidden>
+          <input id="cgName" data-tp="name_placeholder">
+          <button id="cgAdd" class="fit secondary"></button>
+        </div>
+        <div id="syncNote" class="note" hidden></div>
+      </div>
+
+      <div class="sub">
+        <h2 data-t="all_title"></h2>
+        <div id="all"></div>
+      </div>
+
+      <div class="sub">
+        <h2 data-t="key_title"></h2>
+        <p class="hint" data-t="key_hint"></p>
+        <div class="row">
+          <input id="keyInput" type="password" autocomplete="off" data-tp="key_placeholder">
+          <button id="saveKey" class="fit" data-t="save"></button>
+        </div>
+      </div>
+
+      <div class="sub">
+        <h2 data-t="backup_title"></h2>
+        <p class="hint" data-t="backup_hint"></p>
+        <div class="row">
+          <button id="exportBtn" class="fit secondary" data-t="download"></button>
+          <label class="btn secondary fit"><span data-t="restore"></span><input id="importFile" type="file" accept="application/json" hidden></label>
+        </div>
+      </div>
+    </details>
+
+    <footer data-t="footer"></footer>
   </section>
-
-  <div id="status" role="status"></div>
-
-  <section class="card">
-    <div class="row" style="align-items:center">
-      <h2 style="margin:0">Aaj</h2>
-      <button id="summaryBtn" class="secondary" style="flex:0 0 auto">🔊 Aaj ka summary suno</button>
-    </div>
-    <div id="today" style="margin-top:.5rem"></div>
-    <div id="streaks"></div>
-  </section>
-
-  <section class="card">
-    <h2>Saare reminders</h2>
-    <div id="all"></div>
-  </section>
-
-  <section class="card">
-    <h2>Backup</h2>
-    <p class="hint">Sab kuch ek file mein save karein, ya doosre phone par wapas laayein.</p>
-    <div class="row">
-      <button id="exportBtn" class="secondary" style="flex:0 0 auto">Download backup</button>
-      <label class="btn secondary" style="flex:0 0 auto">Restore file <input id="importFile" type="file" accept="application/json" hidden></label>
-    </div>
-  </section>
-
-  <footer>Reminders tab tak bajte hain jab tak yeh page khula hai. Speech, samajh aur awaz: Sarvam AI.</footer>
 </main>
 
 <script src="logic.js"></script>
+<script src="i18n.js"></script>
 <script>
 const API = "https://api.sarvam.ai";
-const LANGS = ["hi-IN","bn-IN","gu-IN","kn-IN","ml-IN","mr-IN","od-IN","pa-IN","ta-IN","te-IN","en-IN"];
 const STORE_KEY = "sarvam_reminders_v2";
+const LANG_CODES = Object.keys(I18n.LANGS);
 const $ = id => document.getElementById(id);
 
 let key = localStorage.getItem("sarvam_key") || "";
 let state = loadState();
-let draft = null, recorder = null, chunks = [];
+let dict = I18n.EN;
+let draft = null, recorder = null, chunks = [], onboardStep = "lang";
+
+// ---------- text ----------
+function t(k, vars = {}) {
+  const s = dict[k] ?? I18n.EN[k] ?? k;
+  return s.replace(/\{(\w+)\}/g, (_, v) => (v in vars ? vars[v] : ""));
+}
+function applyStatic() {
+  document.documentElement.lang = (state.lang || "en-IN").slice(0, 2);
+  document.querySelectorAll("[data-t]").forEach(n => { n.textContent = t(n.dataset.t); });
+  document.querySelectorAll("[data-tp]").forEach(n => { n.placeholder = t(n.dataset.tp); });
+  document.title = t("app_title");
+}
+
+async function loadLanguage(lang) {
+  if (I18n.BUILTIN[lang]) { dict = I18n.BUILTIN[lang]; return; }
+  const cacheKey = `ui_${lang}_v1`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) { try { dict = I18n.validateTranslation(JSON.parse(cached)); return; } catch {} }
+  dict = I18n.EN;
+  if (!key) { setTimeout(() => setStatus(t("translate_needs_key")), 0); return; } // translate once a key is added
+  setStatus(t("translating"));
+  try {
+    const name = I18n.LANGS[lang].english;
+    const data = await call("/v1/chat/completions", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "sarvam-105b", temperature: 0, max_tokens: 12000,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: `Translate every value of this JSON object into simple, everyday ${name} written in ${name} script, as used by ordinary people in small towns. Keep every key unchanged. Keep {placeholders}, emoji, "Sarvam AI", "API key", "WhatsApp", "BP" and times like 08:00 exactly as they are. Reply ONLY with the JSON object.` },
+          { role: "user", content: JSON.stringify(I18n.EN) }] }),
+    });
+    const translated = I18n.validateTranslation(JSON.parse(data.choices?.[0]?.message?.content || "{}"));
+    localStorage.setItem(cacheKey, JSON.stringify(translated));
+    dict = translated;
+    setStatus("");
+  } catch (e) {
+    dict = I18n.EN;
+    setStatus(t("translate_failed"));
+  }
+}
 
 // ---------- state ----------
 function blankState() {
-  return { mode: "solo", people: [{ id: uid(), name: "Main", role: "self", profile: "adult" }],
+  return { lang: null, mode: null, people: [{ id: uid(), name: "", role: "self", profile: "adult" }],
     reminders: [], doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode() };
 }
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STORE_KEY));
     if (s && Array.isArray(s.people) && Array.isArray(s.reminders)) {
-      return { doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode(), ...s };
+      return { lang: null, mode: null, doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode(), ...s };
     }
   } catch {}
   return blankState();
@@ -206,64 +289,36 @@ function makeCode() {
 }
 const members = () => state.people.filter(p => p.role !== "caregiver");
 const caregivers = () => state.people.filter(p => p.role === "caregiver");
-const personName = id => state.people.find(p => p.id === id)?.name || "";
+const isGroup = () => state.mode === "family" || state.mode === "care";
+function displayName(p) {
+  if (!p) return "";
+  if (p.name) return p.name;
+  return members().indexOf(p) === 0 ? t("default_me") : t("default_partner2");
+}
+const personName = id => displayName(state.people.find(p => p.id === id));
 
-// Switching mode only relabels people; nobody's reminders are deleted.
 function setMode(mode) {
   const role = { solo: "self", family: "cared", couples: "partner", care: "resident" }[mode];
   if (mode === "couples" && members().length < 2) {
-    state.people.push({ id: uid(), name: "Partner 2", role: "partner", profile: "adult" });
+    state.people.push({ id: uid(), name: "", role: "partner", profile: "adult" });
   }
   members().forEach(p => { p.role = role; });
   state.mode = mode;
-  save();
 }
-// People shown in the current mode (others are kept, not deleted).
 function activeMembers() {
   if (state.mode === "solo") return members().slice(0, 1);
   if (state.mode === "couples") return members().slice(0, 2);
-  return members(); // family and care home: everyone being looked after
+  return members();
 }
-const MODE_HINT = {
-  solo: "Akele rehne waalon ke liye: apni dawai, khana aur bills.",
-  family: "Ghar ke sab log: baby, bachche, bade-bujurg. Caregivers reminder set karte hain aur alerts dekhte hain.",
-  couples: "Dono partner ek doosre ki dawai aur bills dekh sakte hain.",
-  care: "Daycare aur old-age homes: har resident ka schedule, staff ke liye ek board aur alerts.",
-};
-// Ready-made reminders per profile. Adding these needs no API call.
-const TEMPLATES = {
-  baby: [
-    { title: "Doodh / feeding", kind: "schedule", category: "meal", times: ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00"], food: "any" },
-    { title: "Vitamin D drops", kind: "schedule", category: "medicine", times: ["09:30"], food: "after" },
-    { title: "Vaccine", kind: "bill", category: "appointment", needsDate: true },
-  ],
-  child: [
-    { title: "Tiffin aur school bag", kind: "schedule", category: "other", times: ["07:00"], food: "any" },
-    { title: "Homework", kind: "schedule", category: "other", times: ["18:30"], food: "any" },
-    { title: "Doctor checkup", kind: "bill", category: "appointment", needsDate: true },
-  ],
-  adult: [
-    { title: "Paani piyo", kind: "schedule", category: "other", times: ["11:00", "16:00"], food: "any" },
-    { title: "Bijli ka bill", kind: "bill", category: "bill", repeat: "monthly", needsDate: true },
-    { title: "Phone recharge", kind: "bill", category: "payment", repeat: "monthly", needsDate: true },
-  ],
-  elder: [
-    { title: "Sugar check", kind: "schedule", category: "medicine", times: ["07:30"], food: "before" },
-    { title: "BP ki goli", kind: "schedule", category: "medicine", times: ["08:30", "20:30"], food: "after" },
-    { title: "Shaam ki walk", kind: "schedule", category: "other", times: ["17:30"], food: "any" },
-    { title: "Pension / bank ka kaam", kind: "bill", category: "payment", repeat: "monthly", needsDate: true },
-  ],
-};
 
-// ---------- Sarvam calls ----------
+// ---------- Sarvam ----------
 async function call(path, options) {
-  if (!key) throw new Error("Pehle Sarvam API key daalein.");
+  if (!key) throw new Error(t("key_needed"));
   const res = await fetch(API + path, { ...options, headers: { "api-subscription-key": key, ...(options.headers || {}) } });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error?.message || data?.message || `HTTP ${res.status}`);
   return data;
 }
-
 async function transcribe(blob) {
   const form = new FormData();
   form.append("file", new File([blob], "speech.webm", { type: blob.type || "audio/webm" }));
@@ -271,50 +326,83 @@ async function transcribe(blob) {
   form.append("mode", "transcribe");
   return (await call("/speech-to-text", { method: "POST", body: form })).transcript || "";
 }
-
 async function parseText(text) {
   const now = new Date();
-  const names = activeMembers().map(p => p.name).join(", ");
+  const names = activeMembers().map(displayName).join(", ");
   const system = `You turn one reminder request into JSON. Now: ${now.toString()} (Asia/Kolkata). Today: ${Logic.todayStr(now)}.
-People in this household: ${names}.
-Reply ONLY with a JSON object with these keys:
-"person": one of the names above (who the reminder is for; default the first),
-"title": short title in the request's language,
-"kind": "schedule" (daily routine like medicine or meals) or "bill" (a payment due on a date),
-"category": "medicine" | "meal" | "bill" | "payment" | "other",
+People: ${names}. The user's chosen language is ${I18n.LANGS[state.lang]?.english || "English"}.
+Reply ONLY with a JSON object with keys:
+"person": one of the people above (default the first),
+"title": short title, in the same language and script as the request,
+"kind": "schedule" (daily routine like medicine or meals) or "bill" (something on a date: bill, payment, vaccine, doctor),
+"category": "medicine" | "meal" | "bill" | "payment" | "appointment" | "other",
 "times": array of "HH:MM" 24h times (for schedule),
-"food": "before" | "after" | "with" | "any" (medicine relative to food),
+"food": "before" | "after" | "with" | "any",
 "dueDate": "YYYY-MM-DD" (for bill; next future occurrence),
 "repeat": "none" | "daily" | "monthly",
 "amount": number in rupees or null,
-"lang": one of ${LANGS.join(", ")} (the request's language).`;
+"lang": the request's language code, one of ${LANG_CODES.join(", ")}.`;
   const data = await call("/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "sarvam-105b",
-      messages: [{ role: "system", content: system }, { role: "user", content: text }],
-      response_format: { type: "json_object" }, temperature: 0, max_tokens: 1500 }),
+    body: JSON.stringify({ model: "sarvam-105b", temperature: 0, max_tokens: 1500,
+      response_format: { type: "json_object" },
+      messages: [{ role: "system", content: system }, { role: "user", content: text }] }),
   });
   const raw = JSON.parse(data.choices?.[0]?.message?.content || "{}");
   const clean = Logic.normalizeParsed(raw, Logic.todayStr(now));
-  const person = activeMembers().find(p => p.name.toLowerCase() === String(raw.person || "").toLowerCase());
-  return { ...clean, personId: person ? person.id : activeMembers()[0].id };
+  const match = activeMembers().find(p => displayName(p).toLowerCase() === String(raw.person || "").toLowerCase());
+  return { ...clean, lang: LANG_CODES.includes(clean.lang) ? clean.lang : state.lang, personId: (match || activeMembers()[0]).id };
 }
-
 async function speak(text, lang) {
   const data = await call("/text-to-speech", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: text.slice(0, 1500), language_code: LANGS.includes(lang) ? lang : "hi-IN",
+    body: JSON.stringify({ text: text.slice(0, 1500), language_code: LANG_CODES.includes(lang) ? lang : "en-IN",
       speaker: "shubh", model: "bulbul:v3", output_audio_codec: "wav" }),
   });
   await new Audio("data:audio/wav;base64," + data.audios[0]).play();
 }
-
 function setStatus(msg) { $("status").textContent = msg || ""; }
+const errText = e => (/^missing_/.test(e.message) ? t("err_" + e.message) : e.message);
+
+// ---------- onboarding ----------
+function renderOnboard() {
+  $("stepLang").hidden = onboardStep !== "lang";
+  $("stepMode").hidden = onboardStep !== "mode";
+  $("stepKey").hidden = onboardStep !== "key";
+  $("langGrid").replaceChildren(...LANG_CODES.map(code => {
+    const b = el("button", { textContent: I18n.LANGS[code].native, lang: code.slice(0, 2),
+      className: state.lang === code ? "on" : "" });
+    b.onclick = async () => {
+      state.lang = code; await loadLanguage(code);
+      onboardStep = state.mode ? "done" : "mode"; // changing language later goes straight back to the app
+      save();
+    };
+    return b;
+  }));
+  $("modeList").replaceChildren(...["solo", "family", "couples", "care"].map(m => {
+    const b = el("button", { className: "choice" + (state.mode === m ? " on" : "") },
+      el("strong", { textContent: t("mode_" + m) }), el("span", { textContent: t("mode_" + m + "_desc") }));
+    b.onclick = () => { setMode(m); onboardStep = key || state.keyAsked ? "done" : "key"; save(); };
+    return b;
+  }));
+}
+$("modeBack").onclick = () => { onboardStep = "lang"; render(); };
+$("obKeySave").onclick = async () => {
+  key = $("obKey").value.trim();
+  if (key) localStorage.setItem("sarvam_key", key);
+  state.keyAsked = true;
+  onboardStep = "done";
+  await loadLanguage(state.lang);
+  save();
+};
+$("obKeyLater").onclick = () => { state.keyAsked = true; onboardStep = "done"; save(); };
+$("langBtn").onclick = () => { onboardStep = "lang"; render(); };
+$("modeBtn").onclick = () => { onboardStep = "mode"; render(); };
 
 // ---------- compose ----------
 function showDraft(d) {
   draft = d;
-  $("dPerson").replaceChildren(...activeMembers().map(p => new Option(p.name, p.id, false, p.id === d.personId)));
+  $("dPerson").replaceChildren(...activeMembers().map(p => new Option(displayName(p), p.id, false, p.id === d.personId)));
   $("dTitle").value = d.title || "";
   $("dKind").value = d.kind || "schedule";
   $("dCategory").value = d.category || "other";
@@ -327,60 +415,59 @@ function showDraft(d) {
   $("draft").hidden = false;
 }
 function toggleKind() {
-  const bill = $("dKind").value === "bill";
-  $("scheduleFields").hidden = bill;
-  $("billFields").hidden = !bill;
+  const dated = $("dKind").value === "bill";
+  $("scheduleFields").hidden = dated;
+  $("billFields").hidden = !dated;
 }
 $("dKind").onchange = toggleKind;
 
 async function understand(text) {
-  setStatus("Samajh raha hoon...");
-  try { showDraft(await parseText(text)); setStatus("Check karke Save kijiye."); }
-  catch (e) { setStatus("Samajh nahi aaya: " + e.message); }
+  setStatus(t("thinking"));
+  try { showDraft(await parseText(text)); setStatus(t("check_save")); }
+  catch (e) { setStatus(e instanceof SyntaxError ? t("not_understood") : errText(e)); }
 }
-$("parseBtn").onclick = () => { const t = $("typed").value.trim(); if (t) understand(t); };
-$("typed").onkeydown = e => { if (e.key === "Enter") $("parseBtn").click(); };
+$("addBtn").onclick = () => { const v = $("typed").value.trim(); if (v) understand(v); };
+$("typed").onkeydown = e => { if (e.key === "Enter") $("addBtn").click(); };
 
 $("mic").onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-  if (!key) return setStatus("Pehle API key daalein.");
+  if (!key) return setStatus(t("key_needed"));
   let stream;
   try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-  catch { return setStatus("Microphone ki permission dijiye."); }
+  catch { return setStatus(t("mic_permission")); }
   chunks = [];
   recorder = new MediaRecorder(stream);
   recorder.ondataavailable = e => chunks.push(e.data);
   recorder.onstop = async () => {
-    stream.getTracks().forEach(t => t.stop());
-    $("mic").className = ""; $("mic").textContent = "🎤 Bolo";
-    setStatus("Sun raha hoon...");
+    stream.getTracks().forEach(tr => tr.stop());
+    $("mic").classList.remove("rec"); $("mic").textContent = t("speak");
+    setStatus(t("thinking"));
     try {
       const text = await transcribe(new Blob(chunks, { type: recorder.mimeType }));
-      if (!text.trim()) return setStatus("Kuch sunai nahi diya. Phir se boliye.");
+      if (!text.trim()) return setStatus(t("heard_nothing"));
       $("typed").value = text;
       await understand(text);
-    } catch (e) { setStatus("Error: " + e.message); }
+    } catch (e) { setStatus(t("error", { msg: errText(e) })); }
   };
   recorder.start();
-  $("mic").className = "rec"; $("mic").textContent = "⏹ Ruko";
-  setStatus("Recording... boliye.");
+  $("mic").classList.add("rec"); $("mic").textContent = t("stop");
+  setStatus(t("listening"));
 };
 
 $("saveDraft").onclick = () => {
-  const today = Logic.todayStr();
   const kind = $("dKind").value;
   const raw = {
     title: $("dTitle").value, kind, category: $("dCategory").value, food: $("dFood").value,
-    times: $("dTimes").value.split(/[,\s]+/).filter(Boolean),
-    dueDate: $("dDue").value, repeat: kind === "bill" ? $("dRepeat").value : "daily",
-    amount: $("dAmount").value, lang: draft?.lang || "hi-IN",
+    times: $("dTimes").value.split(/[,\s]+/).filter(Boolean), dueDate: $("dDue").value,
+    repeat: kind === "bill" ? $("dRepeat").value : "daily", amount: $("dAmount").value,
+    lang: draft?.lang || state.lang,
   };
   let clean;
-  try { clean = Logic.normalizeParsed(raw, today); }
-  catch (e) { return setStatus(e.message); }
-  state.reminders.push({ ...clean, id: uid(), personId: $("dPerson").value, createdBy: activeMembers()[0]?.id });
+  try { clean = Logic.normalizeParsed(raw, Logic.todayStr()); }
+  catch (e) { return setStatus(errText(e)); }
+  state.reminders.push({ ...clean, id: uid(), personId: $("dPerson").value });
   draft = null; $("draft").hidden = true; $("typed").value = "";
-  setStatus("Reminder save ho gaya.");
+  setStatus(t("saved"));
   save();
 };
 $("cancelDraft").onclick = () => { draft = null; $("draft").hidden = true; setStatus(""); };
@@ -388,159 +475,21 @@ $("cancelDraft").onclick = () => { draft = null; $("draft").hidden = true; setSt
 // ---------- render ----------
 function el(tag, props = {}, ...kids) {
   const n = Object.assign(document.createElement(tag), props);
-  n.append(...kids.filter(k => k !== null && k !== undefined));
+  n.append(...kids.filter(k => k !== null && k !== undefined && k !== false));
   return n;
 }
-const fmtTime = d => d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-const STATUS_TEXT = { taken: "✓ Le liya", missed: "Chhoot gaya", snoozed: "Baad mein", pending: "" };
-const ROLE_TEXT = { self: "Aap", cared: "Member", caregiver: "Caregiver", partner: "Partner", resident: "Resident" };
-const PROFILE_TEXT = { baby: "Baby", child: "Bachcha", adult: "Adult", elder: "Bujurg" };
+const fmtTime = d => d.toLocaleTimeString(state.lang || "en-IN", { hour: "numeric", minute: "2-digit" });
+const ROLE_KEY = { self: "role_self", cared: "role_cared", caregiver: "role_caregiver", partner: "role_partner", resident: "role_resident" };
 
 function render() {
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.mode === state.mode));
-  $("setup").hidden = Boolean(key);
-  $("modeHint").textContent = MODE_HINT[state.mode];
-  renderPeople();
-  renderTemplates();
-  renderCheckins();
-  renderBoard();
-  renderAlerts();
-  renderToday();
-  renderAll();
-}
-
-const isGroup = () => state.mode === "family" || state.mode === "care";
-
-function renderPeople() {
-  const titles = { solo: "Aap", family: "Parivaar", couples: "Couple", care: "Residents aur staff" };
-  $("peopleTitle").textContent = titles[state.mode];
-  const shown = isGroup() ? [...activeMembers(), ...caregivers()] : activeMembers();
-  $("people").replaceChildren(...shown.map(p => {
-    const name = el("input", { value: p.name, ariaLabel: "Naam" });
-    name.onchange = () => { p.name = name.value.trim() || p.name; save(); };
-    const roleLabel = p.role === "caregiver" && state.mode === "care" ? "Staff" : ROLE_TEXT[p.role];
-    const row = el("div", { className: "row", style: "margin-bottom:.4rem;align-items:center" }, name);
-    if (p.role !== "caregiver") {
-      const prof = el("select", { style: "flex:0 0 120px", ariaLabel: "Profile" },
-        ...Object.entries(PROFILE_TEXT).map(([v, t]) => new Option(t, v, false, (p.profile || "adult") === v)));
-      prof.onchange = () => { p.profile = prof.value; save(); };
-      row.append(prof);
-    }
-    row.append(el("span", { className: "meta", style: "flex:0 0 auto", textContent: roleLabel }));
-    const removable = p.role === "caregiver" || (isGroup() && activeMembers().length > 1);
-    if (removable) {
-      const rm = el("button", { className: "secondary", textContent: "Hatao", style: "flex:0 0 auto" });
-      rm.onclick = () => {
-        state.people = state.people.filter(x => x.id !== p.id);
-        state.reminders = state.reminders.filter(r => r.personId !== p.id);
-        save();
-      };
-      row.append(rm);
-    }
-    return row;
-  }));
-  $("addMember").hidden = !isGroup();
-  $("mName").placeholder = state.mode === "care" ? "Resident ka naam (jaise Sharma ji)" : "Naam (jaise Dadi, Baby Aarav)";
-  $("addCaregiver").hidden = !isGroup();
-  $("cgName").placeholder = state.mode === "care" ? "Staff ka naam (jaise Nurse Priya)" : "Caregiver ka naam (jaise Ravi)";
-  $("cgAdd").textContent = state.mode === "care" ? "Add staff" : "Add caregiver";
-  const shared = state.mode !== "solo";
-  $("syncNote").hidden = !shared;
-  $("syncNote").textContent = shared
-    ? `Group code: ${state.code}. Abhi sab is ek phone/browser mein hai, sab log isi screen se dekh sakte hain. Alag phones par sync ke liye backend jodna baaki hai.`
-    : "";
-}
-$("cgAdd").onclick = () => {
-  const name = $("cgName").value.trim();
-  if (!name) return;
-  state.people.push({ id: uid(), name, role: "caregiver" });
-  $("cgName").value = "";
-  save();
-};
-$("mAdd").onclick = () => {
-  const name = $("mName").value.trim();
-  if (!name) return;
-  const role = state.mode === "care" ? "resident" : "cared";
-  state.people.push({ id: uid(), name, role, profile: $("mProfile").value });
-  $("mName").value = "";
-  save();
-};
-
-function renderTemplates() {
-  const people = activeMembers();
-  const sel = $("tPerson");
-  const keep = sel.value;
-  sel.replaceChildren(...people.map(p => new Option(`${p.name} (${PROFILE_TEXT[p.profile || "adult"]})`, p.id)));
-  if (people.some(p => p.id === keep)) sel.value = keep;
-  const person = people.find(p => p.id === sel.value) || people[0];
-  if (!person) { $("templates").replaceChildren(); return; }
-  $("templates").replaceChildren(...(TEMPLATES[person.profile || "adult"] || []).map(t => {
-    const b = el("button", { className: "secondary", textContent: "+ " + t.title });
-    b.onclick = () => {
-      if (t.needsDate) {
-        showDraft({ ...t, personId: person.id, repeat: t.repeat || "none", lang: "hi-IN" });
-        return setStatus("Date chuniye, phir Save kijiye.");
-      }
-      const clean = Logic.normalizeParsed({ ...t, lang: "hi-IN" }, Logic.todayStr());
-      state.reminders.push({ ...clean, id: uid(), personId: person.id });
-      setStatus(`${person.name} ke liye "${t.title}" add ho gaya.`);
-      save();
-    };
-    return b;
-  }));
-}
-$("tPerson").onchange = renderTemplates;
-
-// Staff/caregiver overview: one row per person with today's progress.
-function renderBoard() {
-  $("boardCard").hidden = !isGroup();
-  if (!isGroup()) return;
-  const now = new Date(), date = Logic.todayStr(now);
-  const answers = { ok: "😊", unwell: "😐", help: "🆘" };
-  $("board").replaceChildren(...activeMembers().map(p => {
-    const slots = state.reminders.filter(r => r.personId === p.id).flatMap(r => Logic.slotsForDay(r, date));
-    const st = slots.map(s => Logic.statusOf(s, state.doses, now));
-    const done = st.filter(x => x === "taken").length;
-    const missed = st.filter(x => x === "missed").length;
-    const answer = state.checkins[`${p.id}|${date}`];
-    return el("div", { className: "slot" },
-      el("div", {}, el("strong", { textContent: p.name }),
-        el("div", { className: "meta", textContent: `${PROFILE_TEXT[p.profile || "adult"]} · ${done}/${slots.length} ho gaya` })),
-      el("div", { className: missed ? "st-missed" : "meta",
-        textContent: [answer ? answers[answer] : "check-in baaki", missed ? `${missed} chhoot gaye` : ""].filter(Boolean).join(" · ") }));
-  }));
-}
-
-function renderCheckins() {
-  const date = Logic.todayStr();
-  const opts = [["ok", "😊 Theek hoon"], ["unwell", "😐 Thoda theek nahi"], ["help", "🆘 Madad chahiye"]];
-  $("checkins").replaceChildren(...activeMembers().map(p => {
-    const k = `${p.id}|${date}`;
-    const btns = opts.map(([v, label]) => {
-      const b = el("button", { className: "secondary" + (state.checkins[k] === v ? " on" : ""), textContent: label });
-      b.onclick = () => {
-        state.checkins[k] = v;
-        setStatus(v === "help" ? "Caregivers ko alert dikh raha hai. Neeche WhatsApp se bhejiye." : "Dhanyavaad!");
-        save();
-      };
-      return b;
-    });
-    return el("div", { style: "margin-bottom:.6rem" },
-      activeMembers().length > 1 ? el("strong", { textContent: p.name }) : null,
-      el("div", { className: "checkin" }, ...btns));
-  }));
-}
-
-function renderAlerts() {
-  const shared = state.mode !== "solo";
-  $("alertsCard").hidden = !shared;
-  if (!shared) return;
-  const alerts = Logic.collectAlerts({ ...state, people: [...activeMembers(), ...caregivers()] });
-  if (!alerts.length) { $("alerts").replaceChildren(el("p", { className: "meta", textContent: "Sab theek. Koi alert nahi." })); return; }
-  $("alerts").replaceChildren(...alerts.map(a => el("div", { className: "alert " + a.level },
-    el("span", { textContent: a.message }),
-    el("a", { className: "btn secondary", target: "_blank", rel: "noopener", textContent: "WhatsApp",
-      href: "https://wa.me/?text=" + encodeURIComponent(a.message) }))));
+  const onboarding = !state.lang || !state.mode || onboardStep !== "done";
+  applyStatic();
+  $("onboard").hidden = !onboarding;
+  $("app").hidden = onboarding;
+  if (onboarding) return renderOnboard();
+  $("langBtn").textContent = "🌐 " + I18n.LANGS[state.lang].native;
+  $("modeBtn").textContent = t("mode_" + state.mode) + " · " + t("change");
+  renderToday(); renderCheckins(); renderBoard(); renderAlerts(); renderTemplates(); renderPeople(); renderAll();
 }
 
 function todaySlots() {
@@ -551,109 +500,225 @@ function todaySlots() {
 }
 
 function renderToday() {
-  const now = new Date();
+  const now = new Date(), multi = activeMembers().length > 1;
   const slots = todaySlots();
-  const multi = activeMembers().length > 1;
-  if (!slots.length) {
-    $("today").replaceChildren(el("p", { className: "meta", textContent: "Aaj ke liye kuch nahi. Upar se reminder banaiye." }));
-  } else {
-    $("today").replaceChildren(...slots.map(s => {
-      const r = state.reminders.find(x => x.id === s.reminderId);
-      const st = Logic.statusOf(s, state.doses, now);
-      const hint = Logic.foodHint(s.food, r?.lang || "hi-IN");
-      const info = el("div", {},
-        el("span", { className: "tag", textContent: s.category }),
-        el("strong", { textContent: s.title }),
-        el("div", { className: "meta", textContent:
-          [fmtTime(s.at), hint, multi ? personName(s.personId) : "", r?.amount != null ? `₹${r.amount}` : ""].filter(Boolean).join(" · ") }),
-        st !== "pending" ? el("div", { className: "st-" + st, textContent: STATUS_TEXT[st] }) : null);
-      const mark = (status, label, cls) => {
-        const b = el("button", { className: cls, textContent: label });
-        b.onclick = () => {
-          state.doses = Logic.markDose(state.doses, s.key, status);
-          if (status === "snoozed") state.snoozes[s.key] = Date.now() + 10 * 60000;
-          else delete state.snoozes[s.key];
-          save();
-        };
-        return b;
+  $("today").replaceChildren(...(slots.length ? slots.map(s => {
+    const r = state.reminders.find(x => x.id === s.reminderId);
+    const st = Logic.statusOf(s, state.doses, now);
+    const info = el("div", {},
+      el("span", { className: "tag", textContent: t("cat_" + s.category) }),
+      el("strong", { textContent: s.title }),
+      el("div", { className: "meta", textContent: [fmtTime(s.at), s.food !== "any" ? t("food_" + s.food) : "",
+        multi ? personName(s.personId) : "", r?.amount != null ? `₹${r.amount}` : ""].filter(Boolean).join(" · ") }),
+      st !== "pending" && el("div", { className: "st-" + st, textContent: t("st_" + st) }));
+    const mark = (status, label, cls) => {
+      const b = el("button", { className: cls, textContent: t(label) });
+      b.onclick = () => {
+        state.doses = Logic.markDose(state.doses, s.key, status);
+        if (status === "snoozed") state.snoozes[s.key] = Date.now() + 10 * 60000; else delete state.snoozes[s.key];
+        save();
       };
-      const acts = el("div", { className: "acts" },
-        mark("taken", s.category === "bill" || s.category === "payment" ? "Bhar diya" : "Lo liya", ""),
-        mark("snoozed", "10 min baad", "secondary"),
-        mark("missed", "Chhoot gaya", "secondary"));
-      return el("div", { className: "slot" }, info, st === "taken" ? null : acts);
-    }));
-  }
+      return b;
+    };
+    return el("div", { className: "slot" }, info, st !== "taken" && el("div", { className: "acts" },
+      mark("taken", "taken_btn", ""), mark("snoozed", "snooze_btn", "secondary"), mark("missed", "missed_btn", "secondary")));
+  }) : [el("p", { className: "meta", textContent: t("nothing_today") })]));
+
   const date = Logic.todayStr();
   $("streaks").replaceChildren(...activeMembers().map(p => {
     const n = Logic.streak(state.reminders.filter(r => r.personId === p.id), state.doses, date, now);
-    return n > 0 ? el("div", { className: "streak",
-      textContent: `🌱 ${multi ? p.name + ": " : ""}${n} din se saari dawai time par. Shabaash!` }) : null;
+    return n > 0 ? el("div", { className: "streak", textContent: t("streak", { who: multi ? displayName(p) + ": " : "", n }) }) : null;
   }).filter(Boolean));
 }
 
-function renderAll() {
-  if (!state.reminders.length) { $("all").replaceChildren(el("p", { className: "meta", textContent: "Abhi koi reminder nahi hai." })); return; }
-  $("all").replaceChildren(...state.reminders.map(r => {
-    const when = r.kind === "bill"
-      ? `${r.dueDate}${r.repeat === "monthly" ? " · har mahine" : ""}`
-      : `${r.times.join(", ")}${r.food !== "any" ? " · " + Logic.foodHint(r.food, "en-IN") : ""}`;
-    const del = el("button", { className: "danger", textContent: "Delete" });
-    del.onclick = () => { state.reminders = state.reminders.filter(x => x.id !== r.id); save(); };
-    return el("div", { className: "slot" },
-      el("div", {}, el("span", { className: "tag", textContent: r.category }), el("strong", { textContent: r.title }),
-        el("div", { className: "meta", textContent: [when, personName(r.personId), r.amount != null ? `₹${r.amount}` : ""].filter(Boolean).join(" · ") })),
-      del);
+function renderCheckins() {
+  const date = Logic.todayStr(), multi = activeMembers().length > 1;
+  $("checkins").replaceChildren(...activeMembers().map(p => {
+    const k = `${p.id}|${date}`;
+    const btns = ["ok", "unwell", "help"].map(v => {
+      const b = el("button", { className: "secondary" + (state.checkins[k] === v ? " on" : ""), textContent: t("ci_" + v) });
+      b.onclick = () => { state.checkins[k] = v; setStatus(v === "help" && state.mode !== "solo" ? t("ci_help_sent") : t("ci_thanks")); save(); };
+      return b;
+    });
+    return el("div", { style: "margin-bottom:.6rem" }, multi && el("strong", { textContent: displayName(p) }),
+      el("div", { className: "chips checkin", style: "margin-top:.3rem" }, ...btns));
   }));
 }
 
-// ---------- summary ----------
-$("summaryBtn").onclick = async () => {
-  const slots = todaySlots().filter(s => Logic.statusOf(s, state.doses) !== "taken");
-  const lang = state.reminders.find(r => r.lang)?.lang || "hi-IN";
-  const text = slots.length
-    ? "Aaj ke kaam: " + slots.map(s => `${fmtTime(s.at)} par ${s.title}`).join(", ") + "."
-    : "Aaj ke saare kaam ho gaye. Bahut badhiya!";
-  setStatus("Bol raha hoon...");
-  try { await speak(text, lang); setStatus(""); } catch (e) { setStatus("Awaz nahi chali: " + e.message); }
+function renderBoard() {
+  $("boardCard").hidden = !isGroup();
+  if (!isGroup()) return;
+  const now = new Date(), date = Logic.todayStr(now);
+  const face = { ok: "😊", unwell: "😐", help: "🆘" };
+  $("board").replaceChildren(...activeMembers().map(p => {
+    const slots = state.reminders.filter(r => r.personId === p.id).flatMap(r => Logic.slotsForDay(r, date));
+    const st = slots.map(s => Logic.statusOf(s, state.doses, now));
+    const done = st.filter(x => x === "taken").length, missed = st.filter(x => x === "missed").length;
+    const answer = state.checkins[`${p.id}|${date}`];
+    return el("div", { className: "slot" },
+      el("div", {}, el("strong", { textContent: displayName(p) }),
+        el("div", { className: "meta", textContent: `${t("prof_" + (p.profile || "adult"))} · ${t("board_done", { done, total: slots.length })}` })),
+      el("div", { className: missed ? "st-missed" : "meta",
+        textContent: [answer ? face[answer] : t("board_no_checkin"), missed ? t("board_missed", { n: missed }) : ""].filter(Boolean).join(" · ") }));
+  }));
+}
+
+function renderAlerts() {
+  const shared = state.mode !== "solo";
+  $("alertsCard").hidden = !shared;
+  if (!shared) return;
+  const people = [...activeMembers(), ...caregivers()].map(p => ({ ...p, name: displayName(p) }));
+  const alerts = Logic.collectAlerts({ ...state, people });
+  $("alerts").replaceChildren(...(alerts.length ? alerts.map(a => {
+    const msg = t("al_" + a.type, { name: a.name, title: a.title || "" });
+    return el("div", { className: "alert " + a.level }, el("span", { textContent: msg }),
+      el("a", { className: "btn secondary", target: "_blank", rel: "noopener", textContent: t("whatsapp"),
+        href: "https://wa.me/?text=" + encodeURIComponent(msg) }));
+  }) : [el("p", { className: "meta", textContent: t("no_alerts") })]));
+}
+
+const TEMPLATES = {
+  baby: [
+    { t: "tpl_feeding", kind: "schedule", category: "meal", times: ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00"] },
+    { t: "tpl_vitd", kind: "schedule", category: "medicine", times: ["09:30"], food: "after" },
+    { t: "tpl_vaccine", kind: "bill", category: "appointment", needsDate: true },
+  ],
+  child: [
+    { t: "tpl_bag", kind: "schedule", category: "other", times: ["07:00"] },
+    { t: "tpl_homework", kind: "schedule", category: "other", times: ["18:30"] },
+    { t: "tpl_doctor", kind: "bill", category: "appointment", needsDate: true },
+  ],
+  adult: [
+    { t: "tpl_water", kind: "schedule", category: "other", times: ["11:00", "16:00"] },
+    { t: "tpl_electricity", kind: "bill", category: "bill", repeat: "monthly", needsDate: true },
+    { t: "tpl_recharge", kind: "bill", category: "payment", repeat: "monthly", needsDate: true },
+  ],
+  elder: [
+    { t: "tpl_sugar", kind: "schedule", category: "medicine", times: ["07:30"], food: "before" },
+    { t: "tpl_bp", kind: "schedule", category: "medicine", times: ["08:30", "20:30"], food: "after" },
+    { t: "tpl_walk", kind: "schedule", category: "other", times: ["17:30"] },
+    { t: "tpl_pension", kind: "bill", category: "payment", repeat: "monthly", needsDate: true },
+  ],
+};
+function renderTemplates() {
+  const people = activeMembers(), sel = $("tPerson"), keep = sel.value;
+  sel.replaceChildren(...people.map(p => new Option(`${displayName(p)} · ${t("prof_" + (p.profile || "adult"))}`, p.id)));
+  sel.hidden = people.length < 2;
+  if (people.some(p => p.id === keep)) sel.value = keep;
+  const person = people.find(p => p.id === sel.value) || people[0];
+  if (!person) return $("templates").replaceChildren();
+  $("templates").replaceChildren(...TEMPLATES[person.profile || "adult"].map(tp => {
+    const b = el("button", { className: "secondary", textContent: "+ " + t(tp.t) });
+    b.onclick = () => {
+      const base = { ...tp, title: t(tp.t), lang: state.lang, repeat: tp.repeat || "none", personId: person.id };
+      if (tp.needsDate) { showDraft(base); return setStatus(t("need_date")); }
+      state.reminders.push({ ...Logic.normalizeParsed(base, Logic.todayStr()), id: uid(), personId: person.id });
+      setStatus(t("saved"));
+      save();
+    };
+    return b;
+  }));
+}
+$("tPerson").onchange = renderTemplates;
+
+function renderPeople() {
+  const shown = isGroup() ? [...activeMembers(), ...caregivers()] : activeMembers();
+  $("people").replaceChildren(...shown.map(p => {
+    const name = el("input", { value: p.name, placeholder: displayName(p), ariaLabel: t("name_placeholder") });
+    name.onchange = () => { p.name = name.value.trim(); save(); };
+    const roleText = p.role === "caregiver" && state.mode === "care" ? t("role_staff") : t(ROLE_KEY[p.role]);
+    const row = el("div", { className: "row", style: "margin-bottom:.45rem;align-items:center" }, name);
+    if (p.role !== "caregiver") {
+      const prof = el("select", { className: "fit", style: "width:auto", ariaLabel: t("f_category") },
+        ...["baby", "child", "adult", "elder"].map(v => new Option(t("prof_" + v), v, false, (p.profile || "adult") === v)));
+      prof.onchange = () => { p.profile = prof.value; save(); };
+      row.append(prof);
+    }
+    row.append(el("span", { className: "meta fit", textContent: roleText }));
+    if (p.role === "caregiver" || (isGroup() && activeMembers().length > 1)) {
+      const rm = el("button", { className: "secondary fit", textContent: t("remove") });
+      rm.onclick = () => { state.people = state.people.filter(x => x.id !== p.id);
+        state.reminders = state.reminders.filter(r => r.personId !== p.id); save(); };
+      row.append(rm);
+    }
+    return row;
+  }));
+  $("addMember").hidden = !isGroup();
+  $("addCaregiver").hidden = !isGroup();
+  $("cgAdd").textContent = state.mode === "care" ? t("add_staff") : t("add_caregiver");
+  $("syncNote").hidden = state.mode === "solo";
+  $("syncNote").textContent = t("sync_note", { code: state.code });
+}
+$("cgAdd").onclick = () => {
+  const name = $("cgName").value.trim(); if (!name) return;
+  state.people.push({ id: uid(), name, role: "caregiver" }); $("cgName").value = ""; save();
+};
+$("mAdd").onclick = () => {
+  const name = $("mName").value.trim(); if (!name) return;
+  state.people.push({ id: uid(), name, role: state.mode === "care" ? "resident" : "cared", profile: $("mProfile").value });
+  $("mName").value = ""; save();
 };
 
-// ---------- backup ----------
+function renderAll() {
+  $("all").replaceChildren(...(state.reminders.length ? state.reminders.map(r => {
+    const when = r.kind === "bill"
+      ? r.dueDate + (r.repeat === "monthly" ? " · " + t("repeat_monthly") : "")
+      : r.times.join(", ") + (r.food !== "any" ? " · " + t("food_" + r.food) : "");
+    const del = el("button", { className: "danger", textContent: t("delete") });
+    del.onclick = () => { state.reminders = state.reminders.filter(x => x.id !== r.id); save(); };
+    return el("div", { className: "slot" },
+      el("div", {}, el("span", { className: "tag", textContent: t("cat_" + r.category) }), el("strong", { textContent: r.title }),
+        el("div", { className: "meta", textContent: [when, personName(r.personId), r.amount != null ? `₹${r.amount}` : ""].filter(Boolean).join(" · ") })),
+      del);
+  }) : [el("p", { className: "meta", textContent: t("none_yet") })]));
+}
+
+// ---------- summary, key, backup ----------
+$("summaryBtn").onclick = async () => {
+  const left = todaySlots().filter(s => Logic.statusOf(s, state.doses) !== "taken");
+  const text = left.length
+    ? t("summary_left", { items: left.map(s => `${fmtTime(s.at)} ${s.title}`).join(", ") })
+    : t("summary_done");
+  setStatus("🔊");
+  try { await speak(text, state.lang); setStatus(""); } catch (e) { setStatus(t("voice_failed") + " " + errText(e)); }
+};
+$("saveKey").onclick = async () => {
+  key = $("keyInput").value.trim();
+  localStorage.setItem("sarvam_key", key);
+  $("keyInput").value = "";
+  setStatus(key ? t("key_saved") : "");
+  if (key) await loadLanguage(state.lang);
+  render();
+};
 $("exportBtn").onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = el("a", { href: URL.createObjectURL(blob), download: `reminders-${Logic.todayStr()}.json` });
-  a.click();
-  URL.revokeObjectURL(a.href);
+  a.click(); URL.revokeObjectURL(a.href);
 };
 $("importFile").onchange = async e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   try {
     const s = JSON.parse(await file.text());
-    if (!s || !Array.isArray(s.people) || !Array.isArray(s.reminders)) throw new Error("File format sahi nahi hai.");
-    state = { doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode(), ...s };
-    setStatus("Backup restore ho gaya.");
-    save();
-  } catch (err) { setStatus("Restore nahi hua: " + err.message); }
+    if (!s || !Array.isArray(s.people) || !Array.isArray(s.reminders)) throw new Error("format");
+    state = { doses: {}, checkins: {}, notified: {}, snoozes: {}, code: makeCode(), ...s, lang: state.lang, mode: s.mode || state.mode };
+    setStatus(t("restored")); save();
+  } catch { setStatus(t("restore_failed")); }
   e.target.value = "";
 };
 
-// ---------- reminders firing ----------
+// ---------- alerts firing ----------
 async function announce(slot) {
-  const r = state.reminders.find(x => x.id === slot.reminderId);
-  const lang = r?.lang || "hi-IN";
-  const who = activeMembers().length > 1 ? personName(slot.personId) + ", " : "";
-  const text = `${who}${slot.title}. ${Logic.foodHint(slot.food, lang)}`.trim();
-  if ("Notification" in window && Notification.permission === "granted") new Notification("Reminder", { body: text });
-  if (key) { try { await speak(text, lang); } catch (e) { setStatus("Awaz nahi chali: " + e.message); } }
+  const multi = activeMembers().length > 1;
+  const text = [multi ? personName(slot.personId) : "", slot.title, slot.food !== "any" ? t("food_" + slot.food) : ""]
+    .filter(Boolean).join(". ");
+  if ("Notification" in window && Notification.permission === "granted") new Notification(t("reminder"), { body: text });
+  if (key) { try { await speak(text, state.lang); } catch { setStatus(t("voice_failed")); } }
 }
-
 async function tick() {
-  const now = new Date();
-  const ids = new Set(activeMembers().map(p => p.id));
-  const mine = state.reminders.filter(r => ids.has(r.personId));
+  if (!state.mode) return;
+  const now = new Date(), ids = new Set(activeMembers().map(p => p.id));
   let changed = false;
-  for (const slot of Logic.dueNow(mine, state.notified, now)) {
+  for (const slot of Logic.dueNow(state.reminders.filter(r => ids.has(r.personId)), state.notified, now)) {
     state.notified[slot.key] = true; changed = true;
     if (!state.doses[slot.key]) await announce(slot);
   }
@@ -664,21 +729,18 @@ async function tick() {
       if (slot) await announce(slot);
     }
   }
-  changed ? save() : render(); // re-render so "missed" states and alerts stay current
+  if (changed) save();
+  else if (!$("app").hidden) { renderToday(); renderBoard(); renderAlerts(); } // keep "missed" and alerts current
 }
 
-// ---------- init ----------
-document.querySelectorAll(".tabs button").forEach(b => { b.onclick = () => setMode(b.dataset.mode); });
-$("saveKey").onclick = () => {
-  key = $("keyInput").value.trim();
-  localStorage.setItem("sarvam_key", key);
-  setStatus(key ? "Key save ho gayi." : "Key khaali hai.");
+// ---------- start ----------
+(async function init() {
+  onboardStep = state.lang && state.mode ? "done" : (state.lang ? "mode" : "lang");
+  if (state.lang) await loadLanguage(state.lang);
+  if ("Notification" in window && Notification.permission === "default" && state.mode) Notification.requestPermission();
   render();
-};
-if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
-render();
-setInterval(tick, 30000);
-tick();
+  setInterval(tick, 30000);
+})();
 </script>
 </body>
 </html>
