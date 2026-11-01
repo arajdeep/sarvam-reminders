@@ -10,7 +10,7 @@ const SCRIPT = {
   "kn-IN": ["Kannada", /[ಀ-೿]/], "od-IN": ["Odia", /[଀-୿]/], "ml-IN": ["Malayalam", /[ഀ-ൿ]/],
   "pa-IN": ["Gurmukhi", /[਀-੿]/], "as-IN": ["Assamese (Bengali-Assamese)", /[ঀ-৿]/], "mai-IN": ["Devanagari", /[ऀ-ॿ]/],
   "sat-IN": ["Ol Chiki", /[᱐-᱿]/], "ks-IN": ["Perso-Arabic", /[؀-ۿ]/], "ne-IN": ["Devanagari", /[ऀ-ॿ]/],
-  "sd-IN": ["Perso-Arabic (Sindhi)", /[؀-ۿ]/], "kok-IN": ["Devanagari", /[ऀ-ॿ]/], "doi-IN": ["Devanagari", /[ऀ-ॿ]/],
+  "sd-IN": ["Devanagari", /[ऀ-ॿ]/], "kok-IN": ["Devanagari", /[ऀ-ॿ]/], "doi-IN": ["Devanagari", /[ऀ-ॿ]/],
   "mni-IN": ["Meitei Mayek", /[ꯀ-꯿]/], "brx-IN": ["Devanagari", /[ऀ-ॿ]/], "sa-IN": ["Devanagari", /[ऀ-ॿ]/],
 };
 const key = process.env.SARVAM_API_KEY;
@@ -22,13 +22,23 @@ const RAW_DIR = process.env.RAW_DIR || "/tmp";
 const placeholders = str => (str.match(/\{\w+\}/g) || []).sort().join(",");
 
 async function translateBatch(code, items, tag) {
+  let last;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try { last = await translateOnce(code, items, `${tag}-${attempt}`); } catch (e) { last = { arr: null, tokens: 0, why: e.cause?.code || e.message }; }
+    if (last.arr) return last;
+  }
+  return last;
+}
+
+async function translateOnce(code, items, tag) {
   const name = I18n.LANGS[code].english, [script] = SCRIPT[code];
   const res = await fetch("https://api.sarvam.ai/v1/chat/completions", {
     method: "POST", headers: { "api-subscription-key": key, "content-type": "application/json" },
+    signal: AbortSignal.timeout(150000),
     body: JSON.stringify({ model: "sarvam-105b", temperature: 0, max_tokens: 12000, reasoning_effort: null,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: `You translate app interface text from English into ${name}. Write ONLY in ${script} script (no English words, no transliteration${code === "sd-IN" ? "; Sindhi must be in the Arabic/Perso-Arabic script, NOT Devanagari" : ""}), in simple everyday ${name}. Keep {placeholders}, emoji, "Sarvam AI", "API key", "WhatsApp", "BP", "112" and times like 08:00 unchanged. You receive a JSON array of ${items.length} English strings. Reply ONLY with {"t": [...]} containing exactly ${items.length} translated strings in the same order.` },
+        { role: "system", content: `You translate app interface text from English into ${name}. Write ONLY in ${script} script (no English words, no transliteration), in simple everyday ${name}. Keep {placeholders}, emoji, "Sarvam AI", "API key", "WhatsApp", "BP", "112" and times like 08:00 unchanged. You receive a JSON array of ${items.length} English strings. Reply ONLY with {"t": [...]} containing exactly ${items.length} translated strings in the same order.` },
         { role: "user", content: JSON.stringify(items) }] }),
   });
   const data = await res.json().catch(() => ({}));

@@ -20,7 +20,7 @@
     "sat-IN": { native: "ᱥᱟᱱᱛᱟᱲᱤ", english: "Santali" },
     "ks-IN": { native: "کٲشُر", english: "Kashmiri", rtl: true },
     "ne-IN": { native: "नेपाली", english: "Nepali" },
-    "sd-IN": { native: "سنڌي", english: "Sindhi", rtl: true },
+    "sd-IN": { native: "सिन्धी", english: "Sindhi" }, // Devanagari Sindhi, officially used in India
     "kok-IN": { native: "कोंकणी", english: "Konkani" },
     "doi-IN": { native: "डोगरी", english: "Dogri" },
     "mni-IN": { native: "ꯃꯤꯇꯩꯂꯣꯟ", english: "Manipuri" },
