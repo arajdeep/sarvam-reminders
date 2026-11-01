@@ -38,6 +38,14 @@ The proxy only allows the three endpoints the app uses, the exact models (`sarva
 
 **Elsewhere:** any static host works if each user pastes their own key under More settings. This repo contains no key.
 
+## Project layout
+- `index.html`: markup and page metadata
+- `styles.css`: design system and components
+- `app.js`: state, Sarvam calls and rendering
+- `logic.js`: scheduling rules (food timing, missed doses, streaks, alerts), no DOM, fully tested
+- `i18n.js` + `lang/*.json`: English and Hindi by hand; 21 languages pre-translated with Sarvam by `tools/translate.mjs`
+- `api/sarvam.mjs`: Vercel function that holds the Sarvam key
+
 ## Tests
 ```
 node --test tests/logic.test.js tests/proxy.test.mjs
