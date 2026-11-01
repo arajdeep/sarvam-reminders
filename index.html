@@ -243,12 +243,21 @@ function applyStatic() {
   document.title = t("app_title");
 }
 
+const CACHE_VERSION = "v2"; // bump when interface strings change
+// Text we can show right now, without waiting on the network.
+function cachedDict(lang) {
+  if (!lang) return null;
+  if (I18n.BUILTIN[lang]) return I18n.BUILTIN[lang];
+  try {
+    const c = localStorage.getItem(`ui_${lang}_${CACHE_VERSION}`);
+    return c ? I18n.validateTranslation(JSON.parse(c)) : null;
+  } catch { return null; }
+}
+// Never block the page on this: callers render first, then re-render when it resolves.
 async function loadLanguage(lang) {
-  if (I18n.BUILTIN[lang]) { dict = I18n.BUILTIN[lang]; return; }
-  const cacheKey = `ui_${lang}_v2`; // bump when interface strings change
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) { try { dict = I18n.validateTranslation(JSON.parse(cached)); return; } catch {} }
-  dict = I18n.EN;
+  const ready = cachedDict(lang);
+  if (ready) { if (state.lang === lang) dict = ready; return; }
+  const cacheKey = `ui_${lang}_${CACHE_VERSION}`;
   setStatus(t("translating"));
   try {
     const name = I18n.LANGS[lang].english;
@@ -262,10 +271,10 @@ async function loadLanguage(lang) {
     });
     const translated = I18n.validateTranslation(JSON.parse(data.choices?.[0]?.message?.content || "{}"));
     localStorage.setItem(cacheKey, JSON.stringify(translated));
-    dict = translated;
+    if (state.lang === lang) dict = translated; // ignore if the user switched language meanwhile
     setStatus("");
   } catch (e) {
-    dict = I18n.EN;
+    if (state.lang === lang) dict = I18n.EN;
     setTimeout(() => setStatus(/key/i.test(e.message) ? t("translate_needs_key") : t("translate_failed")), 0);
   }
 }
@@ -387,9 +396,11 @@ function renderOnboard() {
       el("div", { textContent: info.native }),
       code === "en-IN" ? null : el("div", { className: "meta", style: "font-size:.8rem", textContent: info.english }));
     b.onclick = async () => {
-      state.lang = code; await loadLanguage(code);
+      state.lang = code;
+      dict = cachedDict(code) || I18n.EN; // show the app immediately; translate in the background
       onboardStep = state.mode ? "done" : "mode"; // changing language later goes straight back to the app
       save();
+      if (!cachedDict(code)) { setStatus(t("translating")); loadLanguage(code).then(render); }
     };
     return b;
   }));
@@ -763,9 +774,10 @@ async function tick() {
 // ---------- start ----------
 (async function init() {
   onboardStep = state.lang && state.mode ? "done" : (state.lang ? "mode" : "lang");
-  if (state.lang) await loadLanguage(state.lang);
+  dict = cachedDict(state.lang) || I18n.EN;
   if ("Notification" in window && Notification.permission === "default" && state.mode) Notification.requestPermission();
-  render();
+  render(); // always paint first, so the page is never blank
+  if (state.lang && !cachedDict(state.lang)) loadLanguage(state.lang).then(render);
   setInterval(tick, 30000);
 })();
 </script>
