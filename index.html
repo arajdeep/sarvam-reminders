@@ -44,6 +44,9 @@
   .st-taken { color: var(--green); font-weight: 600; }
   .st-missed { color: var(--red); font-weight: 600; }
   .st-snoozed { color: var(--amber); font-weight: 600; }
+  .acts button.on-snoozed { background: var(--amber); color: #fff; }
+  .acts button.on-missed { background: var(--red); color: #fff; }
+  .acts button.on-snoozed, .acts button.on-missed { box-shadow: 0 0 0 3px rgba(0,0,0,.12); }
   .alert { padding: .6rem .75rem; border-radius: 10px; margin-bottom: .45rem; display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
   .alert.urgent { background: #fdecea; color: var(--red); font-weight: 600; }
   .alert.watch { background: #fff6e5; color: #6b4800; }
@@ -242,7 +245,7 @@ function applyStatic() {
 
 async function loadLanguage(lang) {
   if (I18n.BUILTIN[lang]) { dict = I18n.BUILTIN[lang]; return; }
-  const cacheKey = `ui_${lang}_v1`;
+  const cacheKey = `ui_${lang}_v2`; // bump when interface strings change
   const cached = localStorage.getItem(cacheKey);
   if (cached) { try { dict = I18n.validateTranslation(JSON.parse(cached)); return; } catch {} }
   dict = I18n.EN;
@@ -520,9 +523,13 @@ function renderToday() {
       el("strong", { textContent: s.title }),
       el("div", { className: "meta", textContent: [fmtTime(s.at), s.food !== "any" ? t("food_" + s.food) : "",
         multi ? personName(s.personId) : "", r?.amount != null ? `₹${r.amount}` : ""].filter(Boolean).join(" · ") }),
-      st !== "pending" && el("div", { className: "st-" + st, textContent: t("st_" + st) }));
-    const mark = (status, label, cls) => {
-      const b = el("button", { className: cls, textContent: t(label) });
+      st !== "pending" && el("div", { className: "st-" + st, textContent: t("st_" + st)
+        + (st === "snoozed" && state.snoozes[s.key] ? " · " + fmtTime(new Date(state.snoozes[s.key])) : "") }));
+    // The chosen state lights up in its own colour; "Done" stays the main green action until something is chosen.
+    const mark = (status, label) => {
+      const chosen = st === status;
+      const cls = chosen ? "on-" + status : (status === "taken" && st === "pending" ? "" : "secondary");
+      const b = el("button", { className: cls, textContent: t(label), ariaPressed: String(chosen) });
       b.onclick = () => {
         state.doses = Logic.markDose(state.doses, s.key, status);
         if (status === "snoozed") state.snoozes[s.key] = Date.now() + 10 * 60000; else delete state.snoozes[s.key];
@@ -531,7 +538,7 @@ function renderToday() {
       return b;
     };
     return el("div", { className: "slot" }, info, st !== "taken" && el("div", { className: "acts" },
-      mark("taken", "taken_btn", ""), mark("snoozed", "snooze_btn", "secondary"), mark("missed", "missed_btn", "secondary")));
+      mark("taken", "taken_btn"), mark("snoozed", "snooze_btn"), mark("missed", "missed_btn")));
   }) : [el("p", { className: "meta", textContent: t("nothing_today") })]));
 
   const date = Logic.todayStr();
@@ -545,13 +552,23 @@ function renderCheckins() {
   const date = Logic.todayStr(), multi = activeMembers().length > 1;
   $("checkins").replaceChildren(...activeMembers().map(p => {
     const k = `${p.id}|${date}`;
+    const answer = state.checkins[k];
     const btns = ["ok", "unwell", "help"].map(v => {
-      const b = el("button", { className: "secondary" + (state.checkins[k] === v ? " on" : ""), textContent: t("ci_" + v) });
-      b.onclick = () => { state.checkins[k] = v; setStatus(v === "help" && state.mode !== "solo" ? t("ci_help_sent") : t("ci_thanks")); save(); };
+      const b = el("button", { className: "secondary" + (answer === v ? " on" : ""), textContent: t("ci_" + v), ariaPressed: String(answer === v) });
+      b.onclick = async () => {
+        state.checkins[k] = v;
+        save();
+        try { await speak(t("ci_reply_" + v), state.lang); } catch (e) { setStatus(errText(e)); }
+      };
       return b;
     });
+    // Reply right under the buttons, so the person sees (and hears) a response where they tapped.
+    const reply = answer && el("div", { className: "note", role: "status", style: "margin-top:.5rem" },
+      el("div", { textContent: t("ci_reply_" + answer) }),
+      answer === "help" && state.mode !== "solo" ? el("div", { textContent: t("ci_help_sent"), style: "margin-top:.3rem" }) : null,
+      answer === "help" ? el("a", { className: "btn danger", href: "tel:112", textContent: t("call_112"), style: "margin-top:.5rem" }) : null);
     return el("div", { style: "margin-bottom:.6rem" }, multi && el("strong", { textContent: displayName(p) }),
-      el("div", { className: "chips checkin", style: "margin-top:.3rem" }, ...btns));
+      el("div", { className: "chips checkin", style: "margin-top:.3rem" }, ...btns), reply);
   }));
 }
 
